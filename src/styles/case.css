@@ -16,7 +16,8 @@
   --bed: 64rem;              /* screens and figures */
   --rail: 15rem;
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
-  padding-top: clamp(7rem, 14vh, 10rem);
+  /* No fixed header to clear any more — just the page's own top margin. */
+  padding-top: clamp(3rem, 7vh, 5rem);
 }
 
 /* ---------- Masthead ---------- */
@@ -105,7 +106,7 @@
 
 .case-rail-inner {
   position: sticky;
-  top: 7rem;
+  top: 2.5rem;
   padding-left: 0.9rem;
   border-left: 1px solid rgba(196, 176, 255, 0.14);
 }
@@ -116,7 +117,6 @@
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-:lang(ka) .case-rail-label { letter-spacing: 0.06em; }
 .case-rail ol {
   list-style: none;
   display: grid;
@@ -163,8 +163,8 @@
 .case-prose > p:first-child { margin-top: 0; }
 
 .case-h2 {
-  /* Scroll-margin keeps a rail jump from landing under the fixed nav. */
-  scroll-margin-top: 6.5rem;
+  /* A rail jump should land with the heading a little off the top edge. */
+  scroll-margin-top: 2rem;
   margin-top: clamp(3.5rem, 7vw, 5rem);
   font-family: var(--font-display);
   font-weight: 500;
@@ -190,7 +190,6 @@
   text-transform: uppercase;
   color: var(--lilac);
 }
-:lang(ka) .case-decision-num { letter-spacing: 0.06em; }
 .case-decision-text {
   display: block;
   margin-top: 0.4rem;

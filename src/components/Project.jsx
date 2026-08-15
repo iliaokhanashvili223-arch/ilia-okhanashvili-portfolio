@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { animate, inView } from "motion"
-import { useLang } from "../i18n/LanguageContext.jsx"
 
 /* ============================================================
    THE HAND, DEALT
@@ -19,7 +18,6 @@ import { useLang } from "../i18n/LanguageContext.jsx"
    ============================================================ */
 
 export default function Project({ project, onAnnounce }) {
-  const { t, lang } = useLang()
   const deckRef = useRef(null)
   const itemRefs = useRef([])
 
@@ -84,8 +82,7 @@ export default function Project({ project, onAnnounce }) {
       if (idx === -1) return
       if (hand[idx].src === tile.src) return
 
-      const name = t(tile.name)
-      const nextAlt = `${project.title}, ${name}`
+      const nextAlt = `${project.title}, ${tile.name}`
       const outgoing = hand[idx]
 
       const land = () => {
@@ -126,7 +123,7 @@ export default function Project({ project, onAnnounce }) {
           }
         )
     },
-    [hand, project, single, t, onAnnounce]
+    [hand, project, single, onAnnounce]
   )
 
   const titleId = `t-${project.id}`
@@ -145,9 +142,9 @@ export default function Project({ project, onAnnounce }) {
           <h3 className="project-title" id={titleId}>
             {project.title}
           </h3>
-          <span className="project-kind">{t(project.kind)}</span>
+          <span className="project-kind">{project.kind}</span>
         </div>
-        <p className="project-sub">{t(project.sub)}</p>
+        <p className="project-sub">{project.sub}</p>
       </div>
 
       <div className={["deck", ...project.deck.variant].join(" ")} ref={deckRef}>
@@ -170,14 +167,14 @@ export default function Project({ project, onAnnounce }) {
             </span>
           </div>
         ))}
-        {caption && <p className="deck-cap">{t(caption)}</p>}
+        {caption && <p className="deck-cap">{caption}</p>}
       </div>
 
       {project.sheet && (
         <div className="sheet">
           <div className="sheet-head">
             <span className="sheet-count">{project.sheet.count}</span>
-            <span className="sheet-note">{t(project.sheet.note)}</span>
+            <span className="sheet-note">{project.sheet.note}</span>
           </div>
           <div className="sheet-grid">
             {project.sheet.tiles.map((tile) => (
@@ -186,7 +183,6 @@ export default function Project({ project, onAnnounce }) {
                 className={"tile" + (dealt.has(tile.src) ? " is-dealt" : "")}
                 type="button"
                 onClick={() => play(tile)}
-                lang={lang}
               >
                 <span className="tile-box">
                   <img
@@ -198,7 +194,7 @@ export default function Project({ project, onAnnounce }) {
                     decoding="async"
                   />
                 </span>
-                <span className="tile-name">{t(tile.name)}</span>
+                <span className="tile-name">{tile.name}</span>
               </button>
             ))}
           </div>
@@ -208,7 +204,7 @@ export default function Project({ project, onAnnounce }) {
       <div className="project-foot">
         <ul className="tags">
           {project.tags.map((tag, i) => (
-            <li key={i}>{t(tag)}</li>
+            <li key={i}>{tag}</li>
           ))}
         </ul>
         {project.case && (
@@ -218,7 +214,7 @@ export default function Project({ project, onAnnounce }) {
             aria-labelledby={`${titleId} ${ctaId}`}
           >
             <span className="label" id={ctaId}>
-              {t({ en: "Read case study", ka: "იხილეთ ქეისი" })}
+              Read case study
             </span>
             <span className="arrow" aria-hidden="true">
               →

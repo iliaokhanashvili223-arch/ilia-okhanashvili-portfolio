@@ -24,7 +24,6 @@ body {
   caret-color: var(--lilac-mid);
 }
 
-:lang(ka) { letter-spacing: 0; }
 
 ::selection {
   background: var(--lilac-deep);
@@ -49,107 +48,9 @@ html { scrollbar-color: #2b2440 var(--bg); scrollbar-width: thin; }
 
 a { color: inherit; text-decoration: none; }
 
-.skip-link {
-  position: absolute;
-  top: -100%;
-  left: 1rem;
-  z-index: 100;
-  padding: 0.6rem 1rem;
-  background: var(--bg-raise);
-  color: var(--ink);
-  border: 1px solid var(--lilac-deep);
-  border-radius: 6px;
-  font-size: 0.875rem;
-}
-.skip-link:focus-visible { top: 1rem; }
 
-/* ---------- Navigation ---------- */
 
-.site-nav {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 1.4rem clamp(1.25rem, 4vw, 3.5rem);
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.9s var(--ease-out) 1.1s, transform 0.9s var(--ease-out) 1.1s;
-}
-.is-loaded .site-nav { opacity: 1; transform: none; }
 
-.wordmark {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.45rem;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-.wordmark-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--lilac-mid);
-  box-shadow: 0 0 10px 1px var(--lilac-deep);
-}
-
-.nav-links {
-  display: flex;
-  gap: clamp(1.25rem, 3vw, 2.5rem);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--ink-soft);
-}
-.nav-links a {
-  position: relative;
-  padding: 0.25rem 0;
-  transition: color 0.25s ease;
-}
-.nav-links a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 1px;
-  background: var(--lilac);
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.35s var(--ease-out);
-}
-.nav-links a:hover { color: var(--ink); }
-.nav-links a:hover::after {
-  transform: scaleX(1);
-  transform-origin: left;
-}
-
-.lang-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
-  background: rgba(20, 18, 29, 0.55);
-  border: 1px solid rgba(196, 176, 255, 0.18);
-  border-radius: 999px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--ink-faint);
-  cursor: pointer;
-  transition: border-color 0.25s ease;
-}
-.lang-toggle:hover { border-color: rgba(196, 176, 255, 0.45); }
-.lang-opt { transition: color 0.25s ease; }
-.lang-opt.is-active { color: var(--lilac); }
-.lang-divider { color: rgba(196, 176, 255, 0.25); }
 
 /* ---------- Hero ----------
    The hero is a tall scroll track with a pinned stage inside it. The extra
@@ -579,10 +480,6 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 760px), (max-aspect-ratio: 1/1) {
   .scroll-cue { display: none; }
 
-  /* Nav links keep living on mobile: second row under the wordmark. */
-  .site-nav { flex-wrap: wrap; row-gap: 0.7rem; padding-block: 1.1rem; }
-  .nav-links { order: 3; width: 100%; gap: 1.4rem; font-size: 0.875rem; }
-
   .hero-copy {
     padding-bottom: 3.5rem;
   }
@@ -650,7 +547,6 @@ a { color: inherit; text-decoration: none; }
   background: var(--lilac-mid);
   box-shadow: 0 0 8px 1px var(--lilac-deep);
 }
-:lang(ka) .eyebrow { letter-spacing: 0.08em; }
 
 .section-title {
   font-family: var(--font-display);
@@ -784,7 +680,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--lilac);
 }
-:lang(ka) .project-kind { letter-spacing: 0.08em; }
 .project-sub {
   color: var(--ink-soft);
   font-size: clamp(1rem, 1.3vw, 1.0625rem);
@@ -874,7 +769,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-:lang(ka) .deck-cap { letter-spacing: 0.1em; }
 
 /* ---------- Arrangement 1: the duo (a web surface and a phone app) -------
 
@@ -1034,7 +928,6 @@ a { color: inherit; text-decoration: none; }
   text-overflow: ellipsis;
   transition: color 0.3s ease;
 }
-:lang(ka) .tile-name { letter-spacing: 0; }
 .tile:hover .tile-name { color: var(--ink-soft); }
 
 /* Which screens are currently in the hand. */
@@ -1070,7 +963,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-:lang(ka) .tags li { letter-spacing: 0.04em; }
 
 .case-cta {
   display: inline-flex;
@@ -1181,7 +1073,6 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink-faint);
   margin-bottom: 1.1rem;
 }
-:lang(ka) .skills-cloud-label { letter-spacing: 0.06em; }
 .skills-chips {
   list-style: none;
   display: flex;
@@ -1312,7 +1203,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-:lang(ka) .photo-frame-note { letter-spacing: 0.06em; }
 
 /* Lilac corner brackets, drawn just inside the dashed line. */
 .frame-tick {
@@ -1415,7 +1305,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-:lang(ka) .fact-label { letter-spacing: 0.06em; }
 .fact-value { margin-top: 0.4rem; color: var(--ink); }
 .fact-value .muted { color: var(--ink-soft); }
 
@@ -1458,7 +1347,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--ink-soft);
 }
-:lang(ka) .avail-chip { letter-spacing: 0.06em; }
 .avail-dot {
   width: 7px;
   height: 7px;
@@ -1774,7 +1662,6 @@ a { color: inherit; text-decoration: none; }
   color: var(--lilac-deep);
   margin-bottom: 0.5rem;
 }
-:lang(ka) .prose h3 .num { letter-spacing: 0.06em; }
 .prose ul { padding-left: 1.15rem; }
 .prose li + li { margin-top: 0.5rem; }
 .prose li::marker { color: var(--lilac-deep); }
@@ -1924,7 +1811,6 @@ a { color: inherit; text-decoration: none; }
      plates, they are layout rather than motion. */
   .hero { --hero-drive: 0px; }
 
-  .site-nav,
   .hero-copy,
   .hero-intro,
   .hero-title .line-inner,
@@ -1966,7 +1852,6 @@ a { color: inherit; text-decoration: none; }
 
 html:not(.js) .hero { --hero-drive: 0px; }
 html:not(.js) .hero-scene,
-html:not(.js) .site-nav,
 html:not(.js) .hero-intro,
 html:not(.js) .hero-sub,
 html:not(.js) .hero-actions,

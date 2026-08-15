@@ -1,32 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import SiteNav from "../components/SiteNav.jsx"
 import SiteFooter from "../components/SiteFooter.jsx"
 import Reveal from "../components/Reveal.jsx"
 import NotFound from "./NotFound.jsx"
-import { useLang } from "../i18n/LanguageContext.jsx"
 import { CASES } from "../data/cases.js"
-
-const ui = {
-  back: { en: "All work", ka: "ყველა ნამუშევარი" },
-  contents: { en: "Contents", ka: "სარჩევი" },
-  next: { en: "Next case", ka: "შემდეგი ქეისი" },
-  talk: { en: "Let's talk", ka: "დაველაპარაკოთ" },
-  talkNote: {
-    en: "Open to remote roles and contracts.",
-    ka: "ღია ვარ დისტანციური პოზიციებისა და კონტრაქტებისთვის.",
-  },
-}
 
 /* The chapters are the h2s. They become the sticky rail on the left, and the
    rail tracks which one is currently under the reader. */
-function useChapters(blocks, lang) {
+function useChapters(blocks) {
   return useMemo(() => {
     let n = 0
     return blocks.flatMap((b) =>
       b.type === "h2" ? [{ id: `ch-${n++}`, text: b.text }] : []
     )
-  }, [blocks, lang])
+  }, [blocks])
 }
 
 function useActiveChapter(ids) {
@@ -53,31 +40,31 @@ function useActiveChapter(ids) {
   return active
 }
 
-function Block({ block, t, headingId }) {
+function Block({ block, headingId }) {
   switch (block.type) {
     case "h2":
       return (
         <h2 className="case-h2" id={headingId}>
-          {t(block.text)}
+          {block.text}
         </h2>
       )
 
     case "decision":
       return (
         <Reveal as="h3" className="case-decision">
-          <span className="case-decision-num">{t(block.num)}</span>
-          <span className="case-decision-text">{t(block.text)}</span>
+          <span className="case-decision-num">{block.num}</span>
+          <span className="case-decision-text">{block.text}</span>
         </Reveal>
       )
 
     case "p":
-      return <p>{t(block.text)}</p>
+      return <p>{block.text}</p>
 
     case "ul":
       return (
         <ul className="case-list">
           {block.items.map((li, i) => (
-            <li key={i}>{t(li)}</li>
+            <li key={i}>{li}</li>
           ))}
         </ul>
       )
@@ -86,7 +73,7 @@ function Block({ block, t, headingId }) {
       return (
         <Reveal as="aside" className="case-aside">
           {block.items.map((p, i) => (
-            <p key={i}>{t(p)}</p>
+            <p key={i}>{p}</p>
           ))}
         </Reveal>
       )
@@ -104,7 +91,7 @@ function Block({ block, t, headingId }) {
               decoding="async"
             />
           </div>
-          {block.caption && <figcaption>{t(block.caption)}</figcaption>}
+          {block.caption && <figcaption>{block.caption}</figcaption>}
         </Reveal>
       )
 
@@ -124,8 +111,8 @@ function Block({ block, t, headingId }) {
                 />
               </div>
               <figcaption>
-                <b>{t(f.title)}</b>
-                <span>{t(f.note)}</span>
+                <b>{f.title}</b>
+                <span>{f.note}</span>
               </figcaption>
             </figure>
           ))}
@@ -139,10 +126,9 @@ function Block({ block, t, headingId }) {
 
 export default function CaseStudy() {
   const { slug } = useParams()
-  const { t, lang } = useLang()
   const study = CASES.find((c) => c.slug === slug)
 
-  const chapters = useChapters(study?.blocks ?? [], lang)
+  const chapters = useChapters(study?.blocks ?? [])
   const active = useActiveChapter(chapters.map((c) => c.id))
 
   useEffect(() => {
@@ -161,8 +147,6 @@ export default function CaseStudy() {
 
   return (
     <>
-      <SiteNav home={false} />
-
       <main className="case" id="case">
         {/* ---------- Masthead ---------- */}
         <header className="case-masthead">
@@ -170,18 +154,18 @@ export default function CaseStudy() {
             <span className="arrow" aria-hidden="true">
               ←
             </span>
-            <span>{t(ui.back)}</span>
+            <span>All work</span>
           </Link>
 
-          <p className="eyebrow">{t(study.eyebrow)}</p>
+          <p className="eyebrow">{study.eyebrow}</p>
           <h1 className="case-title">{study.title}</h1>
-          <p className="case-standfirst">{t(study.standfirst)}</p>
+          <p className="case-standfirst">{study.standfirst}</p>
 
           <dl className="case-facts">
             {study.facts.map((f, i) => (
               <div key={i}>
-                <dt className="fact-label">{t(f.label)}</dt>
-                <dd className="fact-value">{t(f.value)}</dd>
+                <dt className="fact-label">{f.label}</dt>
+                <dd className="fact-value">{f.value}</dd>
               </div>
             ))}
           </dl>
@@ -200,9 +184,9 @@ export default function CaseStudy() {
 
         {/* ---------- Body: sticky chapter rail + one measure of prose ------- */}
         <div className="case-layout">
-          <aside className="case-rail" aria-label={t(ui.contents)}>
+          <aside className="case-rail" aria-label="Contents">
             <div className="case-rail-inner">
-              <p className="case-rail-label">{t(ui.contents)}</p>
+              <p className="case-rail-label">Contents</p>
               <ol>
                 {chapters.map((c) => (
                   <li key={c.id}>
@@ -211,7 +195,7 @@ export default function CaseStudy() {
                       className={active === c.id ? "is-here" : undefined}
                       aria-current={active === c.id ? "true" : undefined}
                     >
-                      {t(c.text)}
+                      {c.text}
                     </a>
                   </li>
                 ))}
@@ -224,7 +208,6 @@ export default function CaseStudy() {
               <Block
                 key={i}
                 block={block}
-                t={t}
                 headingId={block.type === "h2" ? chapters[h2Seen++]?.id : undefined}
               />
             ))}
@@ -235,7 +218,7 @@ export default function CaseStudy() {
         <section className="case-end">
           {study.next && (
             <Link className="case-next" to={`/work/${study.next.slug}`}>
-              <span className="eyebrow">{t(ui.next)}</span>
+              <span className="eyebrow">Next case</span>
               <span className="case-next-title">
                 {study.next.title}
                 <span className="arrow" aria-hidden="true">
@@ -245,8 +228,10 @@ export default function CaseStudy() {
             </Link>
           )}
           <Link className="case-talk" to="/#contact">
-            <span className="case-talk-title">{t(ui.talk)}</span>
-            <span className="case-talk-note">{t(ui.talkNote)}</span>
+            <span className="case-talk-title">Let's talk</span>
+            <span className="case-talk-note">
+              Open to remote roles and contracts.
+            </span>
           </Link>
         </section>
       </main>

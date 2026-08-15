@@ -1,26 +1,7 @@
 import { useRef } from "react"
-import { useLang } from "../i18n/LanguageContext.jsx"
 import useHeroChoreography from "../hooks/useHeroChoreography.js"
 
-const copy = {
-  title: [
-    { en: "Designing the spark", ka: "ვქმნი ნაპერწკალს" },
-    { en: "between human", ka: "ადამიანსა და" },
-    { en: "and machine.", ka: "მანქანას შორის." },
-  ],
-  name: { en: "Ilia Okhanashvili", ka: "ილია ოხანაშვილი" },
-  role: { en: "UI/UX Designer", ka: "UI/UX დიზაინერი" },
-  sub: {
-    en: "Interfaces that keep the human touch in a technological world — clean, considered, alive.",
-    ka: "ინტერფეისები, რომლებიც ტექნოლოგიურ სამყაროში ადამიანურ შეხებას ინარჩუნებს — სუფთა, გააზრებული, ცოცხალი.",
-  },
-  viewWork: { en: "View work", ka: "იხილეთ ნამუშევრები" },
-  getInTouch: { en: "Get in touch", ka: "დამიკავშირდით" },
-  scroll: { en: "Scroll", ka: "ქვემოთ" },
-}
-
 export default function Hero() {
-  const { t } = useLang()
   const heroRef = useRef(null)
   const stageRef = useRef(null)
   useHeroChoreography(heroRef, stageRef)
@@ -73,34 +54,41 @@ export default function Hero() {
 
         <div className="hero-copy">
           <h1 className="hero-title">
-            {copy.title.map((line, i) => (
-              <span className="line" key={i}>
-                <span className="line-inner">{t(line)}</span>
-              </span>
-            ))}
+            <span className="line">
+              <span className="line-inner">Designing the spark</span>
+            </span>
+            <span className="line">
+              <span className="line-inner">between human</span>
+            </span>
+            <span className="line">
+              <span className="line-inner">and machine.</span>
+            </span>
           </h1>
           <div className="hero-brief">
             <p className="hero-intro">
-              <span>{t(copy.name)}</span>
+              <span>Ilia Okhanashvili</span>
               <span className="hero-intro-sep" aria-hidden="true">
                 —
               </span>
-              <span>{t(copy.role)}</span>
+              <span>UI/UX Designer</span>
             </p>
-            <p className="hero-sub">{t(copy.sub)}</p>
+            <p className="hero-sub">
+              Interfaces that keep the human touch in a technological world —
+              clean, considered, alive.
+            </p>
             <div className="hero-actions">
               <a className="btn btn-primary" href="#work">
-                {t(copy.viewWork)}
+                View work
               </a>
               <a className="btn btn-ghost" href="#contact">
-                {t(copy.getInTouch)}
+                Get in touch
               </a>
             </div>
           </div>
         </div>
 
         <a className="scroll-cue" href="#work" aria-label="Scroll to work">
-          <span className="scroll-cue-label">{t(copy.scroll)}</span>
+          <span className="scroll-cue-label">Scroll</span>
           <span className="scroll-cue-line" aria-hidden="true" />
         </a>
       </div>

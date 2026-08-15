@@ -1,6 +1,6 @@
 # Ilia Okhanashvili — Portfolio
 
-React + Vite + Tailwind v4. Bilingual EN/KA.
+React + Vite + Tailwind v4.
 
 ## Run
 
@@ -18,9 +18,8 @@ index.html          Vite entry (fonts, preloads, meta)
 public/assets/      every image, served from /assets/…
 src/
   main.jsx          routes: / · /work/:slug · *
-  i18n/             language context; t({en, ka}) picks
   pages/            Home · CaseStudy · NotFound
-  components/       Hero · Work · Project · About · Contact · nav/footer
+  components/       Hero · Work · Project · About · Contact · footer
   hooks/            useHeroChoreography · useSkillBeam
   data/             projects.js · cases.js · skills.js — all content lives here
   styles/
@@ -30,8 +29,11 @@ src/
 ```
 
 **Content is data.** Adding a project or editing case-study prose means editing
-`src/data/*.js` — no component changes. Every bilingual string is a
-`{ en, ka }` pair, so a translation can't drift from its element.
+`src/data/*.js` — no component changes.
+
+**No header.** The page carries no nav bar: the first screen is the hero
+photograph and nothing else. Sections are reached by scrolling, by the hero's
+two buttons, and from a case study by its "All work" link.
 
 **Two CSS halves, on purpose.** Tailwind owns layout, spacing, type scale and
 colour as tokens; anything whose geometry is *measured* — the hero's

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import { useLang } from "../i18n/LanguageContext.jsx"
 import Reveal from "./Reveal.jsx"
 
 const EMAIL = "iliaokhanashvili223@gmail.com"
@@ -36,24 +35,17 @@ export const SOCIALS = [
   },
 ]
 
-const copy = {
-  eyebrow: { en: "Contact", ka: "კონტაქტი" },
-  available: { en: "Available now", ka: "ხელმისაწვდომი ვარ" },
-  giant: { en: "Let's talk", ka: "დაველაპარაკოთ" },
-  lede: {
-    en: "Open to remote roles and contracts.",
-    ka: "ღია ვარ დისტანციური პოზიციებისა და კონტრაქტებისთვის.",
-  },
-  copyBtn: { en: "Copy", ka: "კოპირება" },
-  copied: { en: "Copied ✓", ka: "დაკოპირდა ✓" },
-  meta: {
-    en: "Tbilisi · UTC+4 · usually replies within a day",
-    ka: "თბილისი · UTC+4 · პასუხი, ჩვეულებრივ, ერთ დღეში",
-  },
+const COPY = {
+  eyebrow: "Contact",
+  available: "Available now",
+  giant: "Let's talk",
+  lede: "Open to remote roles and contracts.",
+  copyBtn: "Copy",
+  copied: "Copied ✓",
+  meta: "Tbilisi · UTC+4 · usually replies within a day",
 }
 
 export default function Contact() {
-  const { t } = useLang()
   const [copied, setCopied] = useState(false)
   const timer = useRef(null)
 
@@ -87,22 +79,22 @@ export default function Contact() {
     <section className="section contact" id="contact" aria-labelledby="contact-h">
       <Reveal className="section-inner">
         <div className="contact-eyebrow-row">
-          <span className="eyebrow">{t(copy.eyebrow)}</span>
+          <span className="eyebrow">{COPY.eyebrow}</span>
           <span className="avail-chip">
             <span className="avail-dot" aria-hidden="true" />
-            <span>{t(copy.available)}</span>
+            <span>{COPY.available}</span>
           </span>
         </div>
 
         {/* The finale: one display-size invitation, carrying the hero's spark
             into the last frame. */}
         <h2 className="contact-giant" id="contact-h">
-          <span>{t(copy.giant)}</span>
+          <span>{COPY.giant}</span>
           <span className="contact-spark" aria-hidden="true">
             ✦
           </span>
         </h2>
-        <p className="contact-lede">{t(copy.lede)}</p>
+        <p className="contact-lede">{COPY.lede}</p>
 
         <div className="contact-mail-row">
           <a className="contact-mail" href={`mailto:${EMAIL}`}>
@@ -126,11 +118,11 @@ export default function Contact() {
               <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
               <path d="M10.5 5.5v-2a1.5 1.5 0 0 0-1.5-1.5H4a1.5 1.5 0 0 0-1.5 1.5v5A1.5 1.5 0 0 0 4 10h1.5" />
             </svg>
-            <span className="copy-label">{copied ? t(copy.copied) : t(copy.copyBtn)}</span>
+            <span className="copy-label">{copied ? COPY.copied : COPY.copyBtn}</span>
           </button>
         </div>
 
-        <p className="contact-meta">{t(copy.meta)}</p>
+        <p className="contact-meta">{COPY.meta}</p>
 
         {/* Social row — Uiverse.io component by Zameerahmad01 (icon disc, fill
             rising from the bottom edge, tooltip above), dressed for this room.
