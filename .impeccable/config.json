@@ -98,6 +98,18 @@
         ],
         "createdAt": "2026-08-15T01:11:29.483Z",
         "reason": "third-party brand marks (Ps/N/JS wordmarks) drawn inside their own SVG viewBox; brand letterforms must not inherit the site type system"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(0, 0, 0, 0.85)",
+        "createdAt": "2026-08-15T02:31:06.648Z",
+        "reason": "user confirmed: black hero edge blinder, softened stop"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(0, 0, 0, 0.4)",
+        "createdAt": "2026-08-15T02:31:06.762Z",
+        "reason": "user confirmed: black hero edge blinder, midpoint stop"
       }
     ]
   }
