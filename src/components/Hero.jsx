@@ -69,12 +69,6 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Both edges darken and soften as the hands close, so at the moment of
-            contact the frame has narrowed to the touch itself. Driven by
-            --ignite, the same scalar that lights the spark. */}
-        <span className="hero-edge hero-edge--l" aria-hidden="true" />
-        <span className="hero-edge hero-edge--r" aria-hidden="true" />
-
         <div className="hero-veil" aria-hidden="true" />
 
         <div className="hero-copy">
