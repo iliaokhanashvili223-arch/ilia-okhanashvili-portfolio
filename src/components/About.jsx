@@ -3,6 +3,7 @@ import useSkillBeam from "../hooks/useSkillBeam.js"
 import Reveal from "./Reveal.jsx"
 import * as Icons from "./BeamIcons.jsx"
 import { SKILLS } from "../data/skills.js"
+import { asset } from "../lib/asset.js"
 
 const POINTS = [
   {
@@ -150,13 +151,13 @@ export default function About() {
               <div className="fact-label">Certificate</div>
               <a
                 className="cert-card"
-                href="/assets/certificate-adi.png"
+                href={asset("/assets/certificate-adi.png")}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <img
                   className="cert-thumb"
-                  src="/assets/certificate-adi.webp"
+                  src={asset("/assets/certificate-adi.webp")}
                   alt={CERT_ALT}
                   width="1078"
                   height="775"

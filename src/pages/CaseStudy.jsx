@@ -4,6 +4,7 @@ import SiteFooter from "../components/SiteFooter.jsx"
 import Reveal from "../components/Reveal.jsx"
 import NotFound from "./NotFound.jsx"
 import { CASES } from "../data/cases.js"
+import { asset } from "../lib/asset.js"
 
 /* The chapters are the h2s. They become the sticky rail on the left, and the
    rail tracks which one is currently under the reader. */
@@ -83,7 +84,7 @@ function Block({ block, headingId }) {
         <Reveal as="figure" className={"case-figure" + (block.wide ? " is-wide" : "")}>
           <div className="case-frame">
             <img
-              src={block.src}
+              src={asset(block.src)}
               alt={block.alt}
               width={block.w}
               height={block.h}
@@ -102,7 +103,7 @@ function Block({ block, headingId }) {
             <figure key={i}>
               <div className="case-frame">
                 <img
-                  src={f.src}
+                  src={asset(f.src)}
                   alt={f.alt}
                   width={f.w}
                   height={f.h}
@@ -174,7 +175,7 @@ export default function CaseStudy() {
         {study.cover && (
           <Reveal className="case-cover">
             <img
-              src={study.cover.src}
+              src={asset(study.cover.src)}
               alt={study.cover.alt}
               width={study.cover.w}
               height={study.cover.h}

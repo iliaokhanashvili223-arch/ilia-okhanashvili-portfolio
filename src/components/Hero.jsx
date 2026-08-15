@@ -1,5 +1,6 @@
 import { useRef } from "react"
 import useHeroChoreography from "../hooks/useHeroChoreography.js"
+import { asset, assetSrcSet } from "../lib/asset.js"
 
 export default function Hero() {
   const heroRef = useRef(null)
@@ -16,8 +17,8 @@ export default function Hero() {
             width="1920"
             height="1080"
             fetchPriority="high"
-            src="/assets/hero-room.webp"
-            srcSet="/assets/hero-room@half.webp 960w, /assets/hero-room.webp 1920w"
+            src={asset("/assets/hero-room.webp")}
+            srcSet={assetSrcSet("/assets/hero-room@half.webp 960w, /assets/hero-room.webp 1920w")}
             sizes="(min-aspect-ratio: 16/9) 110vw, 196vh"
           />
           <div className="hero-cast">
@@ -27,8 +28,8 @@ export default function Hero() {
               width="1006"
               height="701"
               fetchPriority="high"
-              src="/assets/hero-hand-robot.webp"
-              srcSet="/assets/hero-hand-robot@half.webp 503w, /assets/hero-hand-robot.webp 1006w"
+              src={asset("/assets/hero-hand-robot.webp")}
+              srcSet={assetSrcSet("/assets/hero-hand-robot@half.webp 503w, /assets/hero-hand-robot.webp 1006w")}
               sizes="(min-aspect-ratio: 16/9) 53vw, 88vw"
             />
             <img
@@ -37,8 +38,8 @@ export default function Hero() {
               width="857"
               height="509"
               fetchPriority="high"
-              src="/assets/hero-hand-human.webp"
-              srcSet="/assets/hero-hand-human@half.webp 428w, /assets/hero-hand-human.webp 857w"
+              src={asset("/assets/hero-hand-human.webp")}
+              srcSet={assetSrcSet("/assets/hero-hand-human@half.webp 428w, /assets/hero-hand-human.webp 857w")}
               sizes="(min-aspect-ratio: 16/9) 45vw, 74vw"
             />
 

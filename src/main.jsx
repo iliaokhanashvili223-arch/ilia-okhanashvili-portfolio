@@ -10,7 +10,9 @@ import NotFound from "./pages/NotFound.jsx"
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    {/* Served from a sub-path on GitHub Pages, from the root everywhere else;
+        BASE_URL carries whichever it is, so the routes match either way. */}
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />

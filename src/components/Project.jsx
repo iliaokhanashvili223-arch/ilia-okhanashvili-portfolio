@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { animate, inView } from "motion"
+import { asset } from "../lib/asset.js"
 
 /* ============================================================
    THE HAND, DEALT
@@ -157,7 +158,7 @@ export default function Project({ project, onAnnounce }) {
           >
             <span className="deck-shot">
               <img
-                src={hand[i].src}
+                src={asset(hand[i].src)}
                 width={item.w}
                 height={item.h}
                 loading="lazy"
@@ -186,7 +187,7 @@ export default function Project({ project, onAnnounce }) {
               >
                 <span className="tile-box">
                   <img
-                    src={tile.src}
+                    src={asset(tile.src)}
                     width={tile.w}
                     height={tile.h}
                     alt=""
