@@ -42,8 +42,18 @@ hand-authored in `world.css`, because utility classes cannot express it.
 
 ## Deploying
 
-Static build, any host. SPA rewrites are already configured for Netlify
-(`public/_redirects`) and Vercel (`vercel.json`). Publish directory: `dist`.
+**Live:** https://iliaokhanashvili223-arch.github.io/ilia-okhanashvili-portfolio/
+
+Every push to `main` builds and publishes via `.github/workflows/deploy.yml`.
+A Pages project site is served from a sub-path, so the workflow builds with
+`VITE_BASE=/<repo>/` and copies `index.html` to `404.html` — Pages has no
+rewrite rules, but it serves `404.html` for unknown paths with the URL intact,
+which is what lets `/work/:slug` survive a cold load.
+
+Asset paths go through `src/lib/asset.js` and the router takes a `basename`,
+both from `BASE_URL`, so the same build runs from a domain root too. Netlify
+(`public/_redirects`) and Vercel (`vercel.json`) are still configured; publish
+directory `dist`.
 
 ## Notes
 
