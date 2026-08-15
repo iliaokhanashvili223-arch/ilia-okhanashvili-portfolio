@@ -1,0 +1,391 @@
+/* ============================================================
+   CASE STUDY — editorial
+
+   The old pages ran everything down one narrow column: prose, screens and
+   asides all at the same width, so nothing had rank and a long argument read
+   as one grey slab. This layout gives the page three widths — a reading
+   measure for prose, a wider bed for screens, and full bleed for the cover —
+   and puts a sticky chapter rail beside them so the reader always knows where
+   in the argument they are.
+
+   The room is unchanged: same near-black violet, same single lilac light.
+   ============================================================ */
+
+.case {
+  --measure: 38rem;          /* the reading column: ~68 characters */
+  --bed: 64rem;              /* screens and figures */
+  --rail: 15rem;
+  --gutter: clamp(1.25rem, 4vw, 3.5rem);
+  padding-top: clamp(7rem, 14vh, 10rem);
+}
+
+/* ---------- Masthead ---------- */
+
+/* A column, so the inline-flex eyebrow can't ride up beside the back link. */
+.case-masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: var(--bed);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  transition: color 0.3s var(--ease-out);
+}
+.back-link:hover { color: var(--lilac); }
+.back-link .arrow { transition: transform 0.3s var(--ease-out); }
+.back-link:hover .arrow { transform: translateX(-3px); }
+
+.case-masthead .eyebrow { margin-top: 2.4rem; }
+
+.case-title {
+  margin-top: 0.9rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 5.6vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.case-standfirst {
+  max-width: 34rem;
+  margin-top: 1.6rem;
+  font-size: clamp(1.15rem, 1.8vw, 1.375rem);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.case-facts {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1.5rem 2rem;
+  margin-top: 3rem;
+  padding-top: 1.8rem;
+  border-top: 1px solid rgba(196, 176, 255, 0.14);
+}
+.case-facts dd { margin: 0; }
+
+/* ---------- Cover ---------- */
+
+/* The one full-bleed moment on the page. It runs past the reading column on
+   both sides so the case opens with the work, not with a paragraph. */
+.case-cover {
+  max-width: 90rem;
+  margin: clamp(3rem, 7vw, 5.5rem) auto 0;
+  padding: 0 var(--gutter);
+}
+.case-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 176, 255, 0.12);
+}
+
+/* ---------- Layout: rail + prose ---------- */
+
+.case-layout {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+  max-width: calc(var(--bed) + var(--rail) + 5rem);
+  margin: clamp(3.5rem, 8vw, 6rem) auto 0;
+  padding: 0 var(--gutter);
+}
+
+.case-rail-inner {
+  position: sticky;
+  top: 7rem;
+  padding-left: 0.9rem;
+  border-left: 1px solid rgba(196, 176, 255, 0.14);
+}
+.case-rail-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+:lang(ka) .case-rail-label { letter-spacing: 0.06em; }
+.case-rail ol {
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+  counter-reset: chapter;
+}
+.case-rail a {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--ink-faint);
+  transition: color 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+}
+.case-rail li { counter-increment: chapter; }
+.case-rail a::before {
+  content: counter(chapter, decimal-leading-zero) " ";
+  color: var(--lilac-deep);
+  font-variant-numeric: tabular-nums;
+}
+.case-rail a:hover { color: var(--ink-soft); }
+.case-rail a.is-here {
+  color: var(--ink);
+  transform: translateX(2px);
+}
+.case-rail a.is-here::before { color: var(--lilac); }
+
+/* ---------- Prose ---------- */
+
+.case-prose {
+  min-width: 0;
+  max-width: var(--bed);
+}
+/* Everything in the prose column sits on the reading measure by default;
+   only pictures are allowed to break out of it. */
+.case-prose > * { max-width: var(--measure); }
+.case-prose > p {
+  margin-top: 1.15rem;
+  color: var(--ink-soft);
+  font-size: clamp(1.0625rem, 1.6vw, 1.3rem);
+  line-height: 1.72;
+  text-wrap: pretty;
+}
+.case-prose > p:first-child { margin-top: 0; }
+
+.case-h2 {
+  /* Scroll-margin keeps a rail jump from landing under the fixed nav. */
+  scroll-margin-top: 6.5rem;
+  margin-top: clamp(3.5rem, 7vw, 5rem);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.case-prose > .case-h2:first-child { margin-top: 0; }
+
+/* A decision is the unit this case is argued in, so it gets a marker rather
+   than just a bolder line of text. */
+.case-decision {
+  margin-top: 2.8rem;
+  padding-left: 1.1rem;
+  border-left: 2px solid var(--lilac-deep);
+}
+.case-decision-num {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lilac);
+}
+:lang(ka) .case-decision-num { letter-spacing: 0.06em; }
+.case-decision-text {
+  display: block;
+  margin-top: 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.case-list {
+  margin-top: 1.3rem;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.8rem;
+}
+.case-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+.case-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lilac-deep);
+}
+
+/* The rejected alternative — the part of a case study that proves there was a
+   choice. It reads as a margin note, not as body copy. */
+.case-aside {
+  margin-top: 1.8rem;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid rgba(196, 176, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(196, 176, 255, 0.04);
+}
+.case-aside p {
+  color: var(--ink-soft);
+  font-size: 0.9875rem;
+  line-height: 1.62;
+}
+.case-aside p + p { margin-top: 0.7rem; }
+
+/* ---------- Pictures ---------- */
+
+.case-frame {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(196, 176, 255, 0.12);
+  background: var(--bg-raise);
+}
+.case-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Figures break the reading measure and take the wider bed — the screens are
+   the evidence, and they were unreadable at prose width. */
+.case-figure {
+  max-width: var(--bed);
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+.case-figure.is-wide .case-frame {
+  /* Tall page captures are cropped to a readable band rather than shrunk to
+     illegibility; the whole page is one click away in the work section. */
+  max-height: 34rem;
+}
+.case-figure.is-wide .case-frame img { object-fit: cover; object-position: top; }
+.case-figure figcaption,
+.case-shots figcaption {
+  margin-top: 0.8rem;
+  max-width: var(--measure);
+  color: var(--ink-faint);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.case-shots {
+  max-width: var(--bed);
+  margin-top: clamp(2rem, 4vw, 3rem);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: clamp(1.2rem, 2.5vw, 2rem);
+}
+.case-shots figcaption { margin-top: 0.7rem; }
+.case-shots figcaption b {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+.case-shots figcaption span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.875rem;
+}
+
+/* ---------- The hand-off ---------- */
+
+.case-end {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.2rem;
+  max-width: var(--bed);
+  margin: clamp(4.5rem, 10vw, 7rem) auto clamp(4rem, 8vw, 6rem);
+  padding: 0 var(--gutter);
+}
+
+.case-next,
+.case-talk {
+  display: block;
+  padding: clamp(1.6rem, 3vw, 2.2rem);
+  border: 1px solid rgba(196, 176, 255, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(196, 176, 255, 0.05), transparent 65%);
+  transition: border-color 0.4s var(--ease-out), background-color 0.4s var(--ease-out),
+              transform 0.4s var(--ease-out);
+}
+.case-next:hover,
+.case-talk:hover {
+  border-color: rgba(196, 176, 255, 0.42);
+  transform: translateY(-3px);
+}
+
+.case-next-title,
+.case-talk-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.case-next .arrow { transition: transform 0.4s var(--ease-out); }
+.case-next:hover .arrow { transform: translateX(6px); }
+
+.case-talk-title { color: var(--lilac); }
+.case-talk-note {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+/* ---------- Not found ---------- */
+
+.not-found {
+  padding-top: clamp(4rem, 12vh, 8rem);
+  text-align: center;
+}
+.not-found .section-lede { margin: 1rem auto 2rem; max-width: 30rem; }
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 62rem) {
+  /* Below the rail's width there is no room for a margin column; the chapter
+     list becomes a scrollable strip pinned under the nav. */
+  .case-layout { grid-template-columns: minmax(0, 1fr); }
+  .case-rail-inner {
+    position: static;
+    padding-left: 0;
+    border-left: 0;
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid rgba(196, 176, 255, 0.14);
+  }
+  .case-rail ol {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 1.1rem;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+    scrollbar-width: none;
+  }
+  .case-rail ol::-webkit-scrollbar { display: none; }
+  .case-prose > * { max-width: none; }
+  .case-prose > p,
+  .case-figure figcaption,
+  .case-shots figcaption { max-width: 38rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-next, .case-talk, .case-rail a, .back-link .arrow, .case-next .arrow {
+    transition: none;
+  }
+}

@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Ilia Okhanashvili — Portfolio
+   World: near-black violet room, one lilac light family.
+
+   Tailwind v4 is configured here, CSS-first. The design tokens below
+   are the same ones DESIGN.md documents; exposing them through @theme
+   makes every one of them a utility too (bg-bg, text-ink, rounded-md…),
+   while the hand-authored choreography keeps living in @layer components.
+   ============================================================ */
+
+@theme {
+  --color-bg: #0b0a10;
+  --color-bg-raise: #14121d;
+  --color-ink: #f2eff9;
+  --color-ink-soft: #b6abd1;   /* secondary text — tinted lilac, never gray */
+  --color-ink-faint: #877ca6;
+  --color-lilac: #c4b0ff;
+  --color-lilac-mid: #a78bfa;
+  --color-lilac-deep: #7c5cd6;
+
+  --font-display: "Clash Display", "Noto Sans Georgian", sans-serif;
+  --font-body: "Satoshi", "Noto Sans Georgian", sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;   /* cards, framed figures, the facts panel */
+  --radius-lg: 14px;   /* work covers and case-study hero images */
+  --radius-phone: 20px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tokens that are not Tailwind scales but are read by the choreography. */
+:root {
+  --bg: var(--color-bg);
+  --bg-raise: var(--color-bg-raise);
+  --ink: var(--color-ink);
+  --ink-soft: var(--color-ink-soft);
+  --ink-faint: var(--color-ink-faint);
+  --lilac: var(--color-lilac);
+  --lilac-mid: var(--color-lilac-mid);
+  --lilac-deep: var(--color-lilac-deep);
+  --font-display: "Clash Display", "Noto Sans Georgian", sans-serif;
+  --font-body: "Satoshi", "Noto Sans Georgian", sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --spark-x: 46.128%;   /* midpoint of the two fingertips in the 2048×1152 frame */
+  --spark-y: 52.645%;
+}
+
+@import "./world.css";
+@import "./case.css";

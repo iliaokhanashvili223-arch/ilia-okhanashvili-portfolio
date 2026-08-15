@@ -1,0 +1,2007 @@
+/* World layer — the hand-authored half of the system: hero choreography,
+   the work deck, the skills beam, and every component whose geometry is
+   measured rather than utility-sized. Ported verbatim from the vanilla
+   build; tokens now come from Tailwind's @theme in index.css. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* `clip` keeps sideways overflow out without turning the body into a scroll
+     container, which is what the pinned hero stage sticks to. */
+  overflow-x: hidden;
+  overflow-x: clip;
+  caret-color: var(--lilac-mid);
+}
+
+:lang(ka) { letter-spacing: 0; }
+
+::selection {
+  background: var(--lilac-deep);
+  color: var(--ink);
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb {
+  background: #2b2440;
+  border-radius: 5px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--lilac-deep); }
+html { scrollbar-color: #2b2440 var(--bg); scrollbar-width: thin; }
+
+:focus-visible {
+  outline: 2px solid var(--lilac-mid);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--bg-raise);
+  color: var(--ink);
+  border: 1px solid var(--lilac-deep);
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+.skip-link:focus-visible { top: 1rem; }
+
+/* ---------- Navigation ---------- */
+
+.site-nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.4rem clamp(1.25rem, 4vw, 3.5rem);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.9s var(--ease-out) 1.1s, transform 0.9s var(--ease-out) 1.1s;
+}
+.is-loaded .site-nav { opacity: 1; transform: none; }
+
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.wordmark-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lilac-mid);
+  box-shadow: 0 0 10px 1px var(--lilac-deep);
+}
+
+.nav-links {
+  display: flex;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.nav-links a {
+  position: relative;
+  padding: 0.25rem 0;
+  transition: color 0.25s ease;
+}
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--lilac);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.35s var(--ease-out);
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-links a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: rgba(20, 18, 29, 0.55);
+  border: 1px solid rgba(196, 176, 255, 0.18);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: border-color 0.25s ease;
+}
+.lang-toggle:hover { border-color: rgba(196, 176, 255, 0.45); }
+.lang-opt { transition: color 0.25s ease; }
+.lang-opt.is-active { color: var(--lilac); }
+.lang-divider { color: rgba(196, 176, 255, 0.25); }
+
+/* ---------- Hero ----------
+   The hero is a tall scroll track with a pinned stage inside it. The extra
+   height is the runway the two hands need to close the gap between them. */
+
+.hero {
+  position: relative;
+  height: calc(100vh + var(--hero-drive));
+  height: calc(100svh + var(--hero-drive));
+
+  /* Motion contract, read by js/main.js. `s` is the position of the hands on
+     the axis their fingers point along: 1 = fingertips touching, 0 = the gap
+     the photograph was shot with, negative = reaching from further away. */
+  --hero-drive: 130svh;
+  --s-entry: -16;      /* where the hands come in from, off-frame */
+  --s-rest: -2.8;      /* where they wait before you scroll */
+  --touch-at: 0.62;    /* fraction of the runway spent closing the gap */
+}
+
+.hero-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* The whole shot: room behind, hands in front, one camera move over both. */
+.hero-scene {
+  position: absolute;
+  inset: 0;
+  transform: scale(var(--scene-s, 1));
+  opacity: 0;
+  transition: opacity 1.5s ease 0.1s;
+}
+.is-loaded .hero-scene { opacity: 1; }
+
+/* Three plates from one photograph. Each carries its own depth, so the pointer
+   moves them at different rates. */
+.layer {
+  position: absolute;
+  display: block;
+  transform: translate3d(
+    calc(var(--x, 0) * var(--sw) + var(--par-x, 0px) * var(--depth)),
+    calc(var(--y, 0) * var(--sh) + var(--par-y, 0px) * var(--depth)),
+    0);
+  will-change: transform;
+}
+
+/* The room answers to the viewport, not to the cast: it has to cover the screen
+   at any aspect. Oversized so its own drift never walks an edge into frame. */
+.layer-room {
+  left: -5%;
+  top: -5%;
+  width: 110%;
+  height: 110%;
+  object-fit: cover;
+  transform: translate3d(
+    calc(var(--room-x, 0) * 1vw + var(--par-x, 0px) * 0.3),
+    calc(var(--room-y, 0) * 1vh + var(--par-y, 0px) * 0.3),
+    0);
+}
+
+/* The cast is the 16:9 frame the photograph was composed in, and the coordinate
+   system the choreography is written in: --sw / --sh are 1% of it, the unit the
+   hands travel in. Sizing and placing this box is how the whole performance is
+   re-staged for a narrow screen — the geometry inside it never changes. */
+.hero-cast {
+  position: absolute;
+  left: 50%;
+  top: var(--cast-y, 50%);
+  width: var(--cast-w);
+  height: calc(var(--cast-w) / 1.7778);
+  transform: translate(-50%, -50%);
+  --cast-w: max(100vw, 177.78vh);
+  --sw: calc(var(--cast-w) / 100);
+  --sh: calc(var(--cast-w) / 177.78);
+}
+
+/* Geometry below is the layer's own box inside the 2048×1152 original. */
+.layer-human {
+  left: 0;
+  top: 52.865%;
+  width: 44.629%;
+  height: 47.135%;
+  --depth: 1.15;
+  --x: var(--hx, -4.72);
+  --y: var(--hy, 2.19);
+}
+
+.layer-robot {
+  left: 47.607%;
+  top: 0;
+  width: 52.393%;
+  height: 64.931%;
+  --depth: 0.8;
+  --x: var(--rx, 4.72);
+  --y: var(--ry, -2.19);
+}
+
+/* ---------- The contact point ----------
+   Both hands travel the same distance in opposite directions, so the midpoint
+   between the fingertips never moves. The spark can live at one fixed spot and
+   simply answer how close they are. */
+
+.contact-point {
+  position: absolute;
+  left: var(--spark-x);
+  top: var(--spark-y);
+  width: 0;
+  height: 0;
+  /* The fingertips' averaged pointer depth, so the spark stays glued to the
+     touch under cursor parallax. Post-touch the scene itself holds still. */
+  transform: translate3d(
+    calc(var(--par-x, 0px) * 0.975),
+    calc(var(--par-y, 0px) * 0.975),
+    0);
+}
+
+.spark,
+.spark-halo,
+.spark-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Light gathers in the gap before anything actually touches. */
+.spark-halo {
+  width: calc(var(--sw) * 12);
+  height: calc(var(--sw) * 12);
+  background: radial-gradient(circle,
+    rgba(167, 139, 250, 0.32) 0%, rgba(146, 116, 236, 0.18) 24%,
+    rgba(124, 92, 214, 0.08) 46%, rgba(124, 92, 214, 0.02) 68%, transparent 84%);
+  opacity: var(--halo, 0);
+}
+
+/* The spark itself only exists at the moment of contact. */
+.spark {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  box-shadow:
+    0 0 12px 3px rgba(255, 255, 255, 0.9),
+    0 0 34px 12px rgba(196, 176, 255, 0.55),
+    0 0 90px 40px rgba(124, 92, 214, 0.28);
+  opacity: var(--ignite, 0);
+}
+.is-contact .spark { animation: spark-breathe 3.4s ease-in-out infinite; }
+
+.spark-ring {
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(196, 176, 255, 0.7);
+  opacity: 0;
+}
+.is-contact .spark-ring { animation: spark-ripple 3.4s var(--ease-out) infinite; }
+
+@keyframes spark-breathe {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+@keyframes spark-ripple {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+  70%  { transform: translate(-50%, -50%) scale(7); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(7); opacity: 0; }
+}
+
+/* Legibility veil — lets the photograph breathe, grounds the copy. */
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(11, 10, 16, 0.55) 0%, rgba(11, 10, 16, 0) 22%),
+    linear-gradient(180deg, rgba(11, 10, 16, 0) 58%, rgba(11, 10, 16, 0.72) 90%, var(--bg) 100%),
+    radial-gradient(ellipse 46% 34% at 16% 24%, rgba(11, 10, 16, 0.5), transparent 70%),
+    radial-gradient(ellipse 52% 38% at 76% 80%, rgba(11, 10, 16, 0.55), transparent 70%);
+  pointer-events: none;
+}
+
+/* Side blinders. They sit at zero while the hands are still reaching and come
+   fully in as the fingertips meet, so the frame closes down onto the touch.
+   --ignite is the same 0→1 scalar that lights the spark, which is why the
+   darkening lands on exactly the frame contact happens. */
+.hero-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(6rem, 16vw, 15rem);
+  opacity: var(--ignite, 0);
+  /* The blur is interpolated rather than faded: a backdrop-filter still
+     establishes a backdrop root at opacity 0, and that leaves a faint seam
+     down the frame while the hands are still apart. */
+  backdrop-filter: blur(calc(var(--ignite, 0) * 14px));
+  -webkit-backdrop-filter: blur(calc(var(--ignite, 0) * 14px));
+  pointer-events: none;
+  z-index: 1;
+}
+.hero-edge--l {
+  left: 0;
+  background: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.72) 45%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent 100%);
+}
+.hero-edge--r {
+  right: 0;
+  background: linear-gradient(270deg, #000 0%, rgba(0, 0, 0, 0.72) 45%, transparent 100%);
+  mask-image: linear-gradient(270deg, #000 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(270deg, #000 55%, transparent 100%);
+}
+
+/* ---------- Hero copy ---------- */
+
+/* The copy holds its ground while the hands close, then clears the frame so
+   the touch gets the last beat to itself. */
+.hero-copy {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem) clamp(4.5rem, 9vh, 6.5rem);
+  max-width: 54rem;
+  opacity: calc(1 - var(--copy-out, 0));
+  transform: translate3d(0, calc(var(--copy-out, 0) * -26px), 0);
+  pointer-events: none;
+}
+.hero-title,
+.hero-brief { pointer-events: auto; }
+
+.hero-intro {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.8s var(--ease-out) 0.95s, transform 0.8s var(--ease-out) 0.95s;
+}
+.hero-intro-sep { color: var(--lilac-deep); }
+.is-loaded .hero-intro { opacity: 1; transform: none; }
+
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.5rem, 5.6vw, 4.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.hero-title .line {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.06em;
+  margin-block: -0.06em;
+}
+.hero-title .line-inner {
+  display: inline-block;
+  transform: translateY(110%);
+  transition: transform 1.1s var(--ease-out);
+}
+.is-loaded .hero-title .line:nth-child(1) .line-inner { transition-delay: 0.5s; }
+.is-loaded .hero-title .line:nth-child(2) .line-inner { transition-delay: 0.63s; }
+.is-loaded .hero-title .line:nth-child(3) .line-inner { transition-delay: 0.76s; }
+.is-loaded .hero-title .line-inner { transform: translateY(0); }
+
+.hero-title .line:nth-child(3) .line-inner {
+  color: var(--lilac);
+}
+
+.hero-sub {
+  margin-top: 1rem;
+  max-width: 34rem;
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  color: var(--ink-soft);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.9s var(--ease-out) 1.05s, transform 0.9s var(--ease-out) 1.05s;
+}
+.is-loaded .hero-sub { opacity: 1; transform: none; }
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2.2rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.9s var(--ease-out) 1.2s, transform 0.9s var(--ease-out) 1.2s;
+}
+.is-loaded .hero-actions { opacity: 1; transform: none; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.7rem;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease,
+              background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--lilac-mid), var(--lilac-deep));
+  color: #0d0817;
+  /* The spark's own light signature: white core, lilac halo. */
+  box-shadow:
+    0 0 10px -2px rgba(255, 255, 255, 0.28),
+    0 4px 24px -6px rgba(124, 92, 214, 0.6);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 14px -2px rgba(255, 255, 255, 0.4),
+    0 8px 32px -6px rgba(167, 139, 250, 0.7);
+}
+
+.btn-ghost {
+  border: 1px solid rgba(196, 176, 255, 0.3);
+  color: var(--ink);
+  background: rgba(20, 18, 29, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.btn-ghost:hover {
+  border-color: rgba(196, 176, 255, 0.65);
+  background: rgba(124, 92, 214, 0.12);
+}
+
+/* ---------- Desktop cross composition ----------
+   The hands cross the frame NE→SW; the copy answers on the free diagonal:
+   the headline reads first from the empty upper-left, the brief (name, role,
+   actions) closes in the lower-right pocket. Both hands, the gap they close
+   and the spark between them stay unobstructed. */
+
+@media (min-width: 761px) and (min-aspect-ratio: 1/1) {
+  .hero-copy {
+    inset: 0;
+    max-width: none;
+    padding: 0;
+  }
+
+  .hero-title {
+    position: absolute;
+    left: clamp(1.25rem, 4vw, 3.5rem);
+    top: clamp(6.5rem, 15vh, 9rem);
+    margin-top: 0;
+    text-align: left;
+    font-size: clamp(2.75rem, 4.5vw, 4.1rem);
+  }
+
+  .hero-brief {
+    position: absolute;
+    right: clamp(1.25rem, 4vw, 3.5rem);
+    bottom: clamp(4.2rem, 10vh, 6.5rem);
+    /* Wide enough that the two Georgian labels still share one line. */
+    max-width: 34rem;
+    text-align: right;
+  }
+
+  .hero-intro {
+    margin-top: 0;
+    justify-content: flex-end;
+    font-size: 1.0625rem;
+    color: var(--ink);
+  }
+
+  .hero-sub {
+    margin-top: 1.1rem;
+    margin-left: auto;
+    font-size: clamp(1.15rem, 1.8vw, 1.375rem);
+    line-height: 1.55;
+    max-width: 30rem;
+  }
+
+  .hero-actions {
+    justify-content: flex-end;
+    margin-top: 1.9rem;
+  }
+
+  .btn {
+    padding: 0.95rem 1.9rem;
+    font-size: 1rem;
+  }
+}
+
+/* ---------- Scroll cue ---------- */
+
+.scroll-cue {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 1.6rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  /* Arrives last, and steps aside the moment its instruction is taken. */
+  opacity: calc(var(--cue-in, 0) * (1 - var(--cue-out, 0)));
+  transition: color 0.25s ease;
+}
+.scroll-cue:hover { color: var(--lilac); }
+
+.scroll-cue-line {
+  width: 1px;
+  height: 44px;
+  background: linear-gradient(180deg, var(--lilac-mid), transparent);
+  overflow: hidden;
+  position: relative;
+}
+.scroll-cue-line::after {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, #fff);
+  animation: cue-drop 2.2s var(--ease-out) infinite;
+}
+@keyframes cue-drop {
+  0%   { top: -100%; }
+  60%, 100% { top: 100%; }
+}
+
+/* ---------- Responsive ---------- */
+
+/* Anything that is not comfortably landscape gets the stacked hero: the cross
+   composition needs a wide frame to cross. */
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .scroll-cue { display: none; }
+
+  /* Nav links keep living on mobile: second row under the wordmark. */
+  .site-nav { flex-wrap: wrap; row-gap: 0.7rem; padding-block: 1.1rem; }
+  .nav-links { order: 3; width: 100%; gap: 1.4rem; font-size: 0.875rem; }
+
+  .hero-copy {
+    padding-bottom: 3.5rem;
+  }
+  .hero-title { font-size: clamp(1.9rem, 8.2vw, 3rem); }
+
+  /* Portrait would crop a cover-sized 16:9 frame down to a keyhole on the gap,
+     with both hands outside it. So the cast stops covering: it becomes a small
+     stage in the upper third, above the copy, with the whole reach inside it. */
+  .hero {
+    --hero-drive: 95svh;
+    --s-entry: -20;
+    --s-rest: -2.4;
+  }
+  .hero-cast {
+    /* Capped by height as well as width, so the reach still clears the copy on
+       a tall tablet the way it does on a phone. */
+    --cast-w: min(168vw, 92vh);
+    --cast-y: 32%;
+  }
+  .hero-scene {
+    --par-x: 0px;
+    --par-y: 0px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-actions .btn { flex: 1 1 auto; }
+}
+
+/* ============================================================
+   PAGE SECTIONS — the room continues past the hero.
+   Same lilac-as-light rule: rims, glows and underlines only.
+   ============================================================ */
+
+.section {
+  position: relative;
+  padding: clamp(5.5rem, 12vh, 9rem) clamp(1.25rem, 4vw, 3.5rem);
+}
+.section-inner { max-width: 76rem; margin: 0 auto; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.eyebrow::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lilac-mid);
+  box-shadow: 0 0 8px 1px var(--lilac-deep);
+}
+:lang(ka) .eyebrow { letter-spacing: 0.08em; }
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.section-lede {
+  max-width: 34rem;
+  margin-left: auto;
+  color: var(--ink-soft);
+  font-size: clamp(1rem, 1.2vw, 1.0625rem);
+}
+
+/* ---------- Scroll reveal ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.85s var(--ease-out), transform 0.85s var(--ease-out);
+}
+.reveal.is-in { opacity: 1; transform: none; }
+.reveal[data-delay="1"] { transition-delay: 0.09s; }
+.reveal[data-delay="2"] { transition-delay: 0.18s; }
+.reveal[data-delay="3"] { transition-delay: 0.27s; }
+
+/* ============================================================
+   WORK — SIX HANDS, DEALT.
+
+   Each project is presented as its own real screens arranged into one object,
+   dealt out of a single pile as it comes into view, with the whole rest of the
+   project laid out underneath as a contact sheet. Click any screen on the sheet
+   and it is played into the hand.
+
+   The arrangements are not styles; they are *materials*.
+   Solution 86 is a dashboard and a phone app, so it is a desktop plate with a
+   hand of phones fanned onto its corner. CuraTour is a phone app with one
+   marketing page, so the fan *is* the composition and the page stands behind
+   it. AutoConnect is eight long web pages, so it is five page proofs stood up
+   side by side, cropped to their heads the way proofs are pinned to a wall.
+   AutoConnect, Mythera and N&D are long pages, so each shows one large card
+   the sheet swaps. HyperJump is one page in two colour modes, so the two stand
+   level and equal and the mark lies across them. Nothing here is decoration:
+   the shape of the work chose the shape of the arrangement.
+
+   Positions are percentages of the deck, so an arrangement is one object that
+   rescales rather than six things that drift apart. The script measures each
+   screen's distance back to the pile rather than storing it, which means the
+   compositions below can be re-authored without touching a line of JavaScript.
+   ============================================================ */
+
+.work-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: clamp(1rem, 3vw, 3rem);
+  flex-wrap: wrap;
+  max-width: 82rem;
+  margin: 0 auto clamp(3rem, 7vw, 5rem);
+}
+.work-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.work-title em { font-style: normal; color: var(--lilac); }
+.work-lede {
+  flex: 1 1 20rem;
+  max-width: 34rem;
+  margin-left: auto;
+  color: var(--ink-soft);
+  font-size: clamp(1rem, 1.2vw, 1.0625rem);
+}
+
+/* ---------- One project ---------- */
+
+.project {
+  max-width: 82rem;
+  margin: 0 auto;
+}
+.project + .project { margin-top: clamp(5.5rem, 13vh, 10rem); }
+
+/* A rule with the project's number on it, the way a plate is numbered on the
+   back of its mount. The number is sequence, and the sequence is information:
+   these are ordered strongest first. */
+.project-rule {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: clamp(1.4rem, 3vw, 2rem);
+}
+.project-no {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 0.8125rem;
+  letter-spacing: 0.22em;
+  color: var(--lilac);
+}
+.project-rule::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(196, 176, 255, 0.35), rgba(196, 176, 255, 0));
+}
+
+.project-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: end;
+}
+.project-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.2rem, 5vw, 3.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  transition: color 0.35s ease;
+}
+.project:hover .project-title { color: var(--lilac); }
+.project-kind {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--lilac);
+}
+:lang(ka) .project-kind { letter-spacing: 0.08em; }
+.project-sub {
+  color: var(--ink-soft);
+  font-size: clamp(1rem, 1.3vw, 1.0625rem);
+  max-width: 34rem;
+}
+
+/* ---------- The hand ---------- */
+
+.deck {
+  position: relative;
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+  width: 100%;
+  isolation: isolate;
+}
+/* The screens are bright; this is the light they throw back into the room. */
+.deck::before {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 12%;
+  bottom: -6%;
+  z-index: 0;
+  background: radial-gradient(ellipse 60% 60% at 46% 55%,
+    rgba(124, 92, 214, 0.28), rgba(124, 92, 214, 0.07) 52%, transparent 74%);
+  filter: blur(26px);
+  pointer-events: none;
+}
+
+.deck-item { position: absolute; }
+
+/* Two layers on purpose: the script writes an inline transform on .deck-item to
+   deal it out of the pile, so the hover lift has to live on a child or it would
+   be overwritten the moment the deal finishes. */
+.deck-shot {
+  display: block;
+  width: 100%;
+  transition: transform 0.5s var(--ease-out), box-shadow 0.5s var(--ease-out),
+              border-color 0.4s ease;
+}
+.deck-shot img { width: 100%; height: auto; display: block; }
+
+/* Plates and proofs keep the hard corner (Framed Plate Rule, DESIGN.md) —
+   a frame with rounded corners is not a frame. Phones keep the corner the
+   device actually has. */
+.plate .deck-shot,
+.proof .deck-shot {
+  overflow: hidden;              /* the swap scales the picture inside */
+  border: 1px solid rgba(196, 176, 255, 0.22);
+  box-shadow: 0 40px 80px -30px rgba(11, 10, 16, 0.95);
+}
+.phone .deck-shot {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(196, 176, 255, 0.26);
+  box-shadow: 0 30px 60px -22px rgba(11, 10, 16, 0.95);
+}
+
+/* A page proof is a tall document shown head-first, the way proofs are pinned
+   up: a fixed window onto the top of the page rather than the whole scroll. */
+.proof .deck-shot { aspect-ratio: 3 / 4; }
+.proof .deck-shot img {
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.deck-item:hover { z-index: 20; }
+.deck-item:hover .deck-shot {
+  transform: translateY(-16px) scale(1.035);
+  box-shadow: 0 52px 96px -24px rgba(11, 10, 16, 0.98);
+  border-color: rgba(196, 176, 255, 0.5);
+}
+/* The one furthest back is dimmer because it is further from the light; on
+   hover it steps forward into it. */
+.is-behind .deck-shot img { filter: brightness(0.74) saturate(0.78); }
+.is-behind:hover .deck-shot img { filter: none; }
+.deck-shot img { transition: filter 0.5s var(--ease-out); }
+
+.deck-cap {
+  position: absolute;
+  left: 0;
+  bottom: -2.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+:lang(ka) .deck-cap { letter-spacing: 0.1em; }
+
+/* ---------- Arrangement 1: the duo (a web surface and a phone app) -------
+
+   Two screens, as large as the column allows: the desktop view and one screen
+   of the app, standing on one baseline like two objects on a surface. The
+   contact sheet feeds them by shape — landscape lands on the wide plate, a
+   phone screen on the tall one — which is the same `data-accepts` contract
+   every other deck uses, just with the slots given the whole stage.
+
+   No device frames. A drawn laptop costs only about 2% of the width, so space
+   was never the argument; the reason is that the bezel, the base and the notch
+   are the one part of the picture that is not the work. The 9:19.5 proportion
+   and the device's own corner radius say "phone" without drawing one. */
+
+.deck--duo {
+  display: flex;
+  align-items: flex-end;
+  gap: 4%;
+}
+.deck--duo .deck-item { position: relative; --rot: 0deg; }
+.deck--duo .duo-wide { flex: 0 0 70%; }
+.deck--duo .duo-tall { flex: 0 0 22%; }
+.deck--duo .duo-wide .deck-shot { aspect-ratio: 16 / 10; }
+.deck--duo .duo-tall .deck-shot { aspect-ratio: 390 / 844; border-radius: 20px; }
+.deck--duo .deck-shot img {
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* ---------- Arrangement 3: the single card (a long web page) -------------
+
+   A page that is 1500x2100 has nothing to gain from being one of five small
+   plates: at that size the reader can see there is a page but not what is on
+   it. So the two web projects show one card, big, square to the room, and the
+   contact sheet changes *that* card. The deck takes its height from the card
+   rather than declaring an aspect, because there is only one thing in it. */
+
+.deck--single .deck-item {
+  position: relative;
+  width: 82%;
+  margin: 0 auto;
+  --rot: 0deg;
+}
+.deck--single .deck-shot { aspect-ratio: var(--card-aspect, 3 / 2); }
+/* A capture that was composed for a 16:9 frame keeps it: crop a centred hero
+   to 3:2 and the composition loses the bottom of its own headline. */
+.deck--wide { --card-aspect: 16 / 9; }
+.deck--single .deck-shot img {
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+/* A card this size does not need to jump; it only needs to answer. */
+.deck--single .deck-item:hover .deck-shot {
+  transform: translateY(-8px) scale(1.008);
+}
+
+/* ---------- Arrangement 5: the pair (one page, two modes) ----------------- */
+
+/* The whole point of this project is that it is the same page twice, so the
+   two stand level and equal and the mark lies across them like a set of chips
+   on a table. Nothing is behind anything: neither mode is the real one. */
+.deck--pair { aspect-ratio: 16 / 5.9; }
+.deck--pair .mode-light { left: 1%;  top: 0;   width: 48%; z-index: 2; --rot: -1.6deg; }
+.deck--pair .mode-dark  { left: 51%; top: 4%;  width: 48%; z-index: 3; --rot: 1.6deg; }
+.deck--pair .mark { width: 8.5%; z-index: 8; }
+.deck--pair .mark .deck-shot {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(196, 176, 255, 0.24);
+  box-shadow: 0 22px 44px -18px rgba(11, 10, 16, 0.95);
+}
+.deck--pair .mark-a { left: 24%; top: 62%; --rot: -9deg; }
+.deck--pair .mark-b { left: 33%; top: 58%; --rot: -4.5deg; }
+.deck--pair .mark-c { left: 42%; top: 56%; --rot: 0deg; }
+.deck--pair .mark-d { left: 51%; top: 58%; --rot: 4.5deg; }
+.deck--pair .mark-e { left: 60%; top: 62%; --rot: 9deg; }
+
+/* Before the script deals them, every hand is already laid out — the rotations
+   live in CSS so a page with no script is a finished picture, not a pile. */
+.deck-item { transform: rotate(var(--rot, 0deg)); }
+
+/* ---------- The rest of the deck ---------- */
+
+.sheet { margin-top: clamp(3rem, 6vw, 4.5rem); }
+
+.sheet-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.sheet-count {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.375rem;
+  letter-spacing: 0.02em;
+  color: var(--lilac);
+}
+.sheet-note { font-size: 0.8125rem; color: var(--ink-faint); }
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 0.9rem 0.7rem;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Whole frames, not crops. Cropping a 390×844 phone into a landscape box
+   leaves you looking at its status bar; a contact sheet shows every frame
+   entire and lets the shapes differ — that difference is information. */
+.tile-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  padding: 7px;
+  overflow: hidden;
+  background: var(--bg-raise);
+  border: 1px solid rgba(196, 176, 255, 0.14);
+  transition: border-color 0.3s ease;
+}
+.tile-box img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  filter: brightness(0.62) saturate(0.68);
+  transition: filter 0.35s ease, transform 0.55s var(--ease-out);
+}
+.tile:hover .tile-box,
+.tile:focus-visible .tile-box { border-color: rgba(196, 176, 255, 0.5); }
+.tile:hover .tile-box img,
+.tile:focus-visible .tile-box img { filter: none; transform: scale(1.06); }
+
+.tile-name {
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.3s ease;
+}
+:lang(ka) .tile-name { letter-spacing: 0; }
+.tile:hover .tile-name { color: var(--ink-soft); }
+
+/* Which screens are currently in the hand. */
+.tile.is-dealt .tile-box { border-color: rgba(196, 176, 255, 0.55); }
+.tile.is-dealt .tile-box img { filter: brightness(0.9) saturate(0.95); }
+.tile.is-dealt .tile-name { color: var(--lilac); }
+.tile.is-dealt .tile-box::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--lilac);
+}
+
+/* ---------- Under the project ---------- */
+
+.project-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+}
+.tags { display: flex; flex-wrap: wrap; gap: 0.45rem; list-style: none; }
+.tags li {
+  padding: 0.32rem 0.7rem;
+  border: 1px solid rgba(196, 176, 255, 0.18);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+:lang(ka) .tags li { letter-spacing: 0.04em; }
+
+.case-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--lilac);
+}
+.case-cta .label { position: relative; }
+.case-cta .label::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -3px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.5s var(--ease-out);
+}
+.case-cta:hover .label::after,
+.case-cta:focus-visible .label::after { transform: scaleX(1); }
+.case-cta .arrow { transition: transform 0.4s var(--ease-out); }
+.case-cta:hover .arrow { transform: translateX(5px); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- About ---------- */
+
+/* 2×2: the second row is sized by the facts card, and the beam stretches to
+   fill it — so the bare beam always tops and bottoms out exactly where the
+   facts card does. */
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  grid-template-areas:
+    "photo copy"
+    "beam  facts";
+  gap: 2.4rem clamp(2.5rem, 6vw, 6rem);
+}
+/* The frame runs the full first row and ends level with the copy. Its ratio
+   has to be released to do that: stretched to the row's height, `aspect-ratio`
+   would compute a width from that height and push the frame out of its own
+   column and under the text. Width comes from the column, height from the row. */
+.about-grid > .photo-frame {
+  grid-area: photo;
+  align-self: stretch;
+  width: 100%;
+  aspect-ratio: auto;
+  min-height: 22rem;
+}
+.about-grid > .about-copy  { grid-area: copy; }
+.about-grid > .skills-beam { grid-area: beam; }
+.about-grid > .facts       { grid-area: facts; }
+
+.about-copy p + p { margin-top: 1.4rem; }
+.about-copy .about-points + p,
+.about-copy p + .about-points { margin-top: 1.8rem; }
+.about-copy p { color: var(--ink-soft); font-size: clamp(1rem, 1.3vw, 1.125rem); }
+.about-copy strong { color: var(--ink); font-weight: 500; }
+.about-copy .about-lead {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+/* The three “what I'm actually good at” points from the LinkedIn About,
+   set as a lilac-ruled list rather than three more gray paragraphs. */
+.about-points { list-style: none; display: grid; gap: 1.4rem; }
+.about-points li {
+  padding-left: 1.2rem;
+  border-left: 2px solid var(--lilac-deep);
+}
+.about-points .point-title {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: clamp(1rem, 1.3vw, 1.0625rem);
+}
+.about-points .point-text {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font-size: 0.9875rem;
+}
+
+/* ----- Skills cloud: the full LINKEDIN.md skill inventory ----- */
+
+.skills-cloud { margin-top: clamp(3rem, 6vw, 4.5rem); }
+.skills-cloud-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 1.1rem;
+}
+:lang(ka) .skills-cloud-label { letter-spacing: 0.06em; }
+.skills-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.skills-chips li {
+  padding: 0.45rem 1rem;
+  border: 1px solid rgba(196, 176, 255, 0.22);
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  transition: border-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
+}
+.skills-chips li:hover { border-color: var(--lilac-mid); color: var(--ink); }
+.skills-chips li.is-core {
+  background: linear-gradient(135deg, var(--lilac), var(--lilac-mid));
+  border-color: transparent;
+  color: #0b0a10;
+  font-weight: 600;
+}
+
+/* ----- Certificate ----- */
+
+/* The credential shows itself rather than describing itself: the real
+   document, thumbnailed, opening full size in a new tab. */
+.cert-card {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  margin-top: 0.6rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(196, 176, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(196, 176, 255, 0.035);
+  transition: border-color 0.35s var(--ease-out), background-color 0.35s var(--ease-out),
+              transform 0.35s var(--ease-out);
+}
+.cert-card:hover {
+  border-color: rgba(196, 176, 255, 0.4);
+  background: rgba(196, 176, 255, 0.07);
+  transform: translateY(-2px);
+}
+.cert-thumb {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+  /* The certificate is a bright blue sheet in a near-black room; damping it
+     until hover keeps it from shouting over everything around it. */
+  filter: saturate(0.8) brightness(0.92);
+  transition: filter 0.35s var(--ease-out);
+}
+.cert-card:hover .cert-thumb { filter: none; }
+.cert-body { min-width: 0; }
+.cert-name { color: var(--ink); font-weight: 600; }
+.cert-issuer { margin-top: 0.1rem; color: var(--ink-soft); font-size: 0.9375rem; }
+.cert-meta { margin-top: 0.25rem; color: var(--ink-faint); font-size: 0.8125rem; }
+.cert-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+  color: var(--lilac);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.cert-cta .arrow { transition: transform 0.35s var(--ease-out); }
+.cert-card:hover .cert-cta .arrow { transform: translate(2px, -2px); }
+
+/* ----- Left rail: portrait frame + skills beam ----- */
+
+/* The frame waits for the portrait. When the photo arrives, drop
+   `<img src="..." alt="Ilia Okhanashvili">` straight inside .photo-frame —
+   :has() hides the monogram placeholder and the dashed inner line. */
+.photo-frame {
+  position: relative;
+  aspect-ratio: 4 / 4.6;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 176, 255, 0.2);
+  background:
+    radial-gradient(120% 85% at 50% 0%, rgba(124, 92, 214, 0.18), transparent 62%),
+    linear-gradient(168deg, #161322, #0e0c16);
+  overflow: hidden;
+}
+.photo-frame::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px dashed rgba(196, 176, 255, 0.22);
+  border-radius: 6px;
+  pointer-events: none;
+}
+.photo-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photo-frame:has(img)::before,
+.photo-frame:has(img) .photo-frame-inner,
+.photo-frame:has(img) .frame-tick { display: none; }
+
+.photo-frame-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.photo-frame-monogram {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 5.6vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: rgba(196, 176, 255, 0.38);
+  text-shadow: 0 0 44px rgba(124, 92, 214, 0.4);
+}
+.photo-frame-note {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+:lang(ka) .photo-frame-note { letter-spacing: 0.06em; }
+
+/* Lilac corner brackets, drawn just inside the dashed line. */
+.frame-tick {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0 solid var(--lilac-mid);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.frame-tick--tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 6px; }
+.frame-tick--tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 6px; }
+.frame-tick--bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 6px; }
+.frame-tick--br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 6px; }
+
+/* ----- Skills beam (vanilla AnimatedBeam) ----- */
+
+/* No card of its own — the component stands bare; its height comes from the
+   grid row it shares with the facts card. */
+.skills-beam {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 0.5rem 0;
+}
+.beam-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.beam-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 20rem;
+  height: 100%;
+  max-height: 15rem;
+}
+.beam-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.beam-node {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  padding: 10px;
+  border-radius: 50%;
+  background: #f2eff9;
+  border: 1px solid rgba(196, 176, 255, 0.55);
+  box-shadow:
+    0 0 24px -6px rgba(124, 92, 214, 0.6),
+    0 2px 10px rgba(0, 0, 0, 0.45);
+  transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
+}
+.beam-node:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 34px -4px rgba(167, 139, 250, 0.8),
+    0 2px 10px rgba(0, 0, 0, 0.45);
+}
+.beam-node svg { width: 100%; height: 100%; display: block; }
+.beam-node--me {
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(135deg, var(--lilac), var(--lilac-deep));
+  color: #0b0a10;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  box-shadow:
+    0 0 40px -4px rgba(167, 139, 250, 0.8),
+    0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.facts {
+  display: grid;
+  gap: 1.6rem;
+  padding: 1.9rem;
+  border: 1px solid rgba(196, 176, 255, 0.14);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(196, 176, 255, 0.045), transparent 60%);
+}
+.fact-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+:lang(ka) .fact-label { letter-spacing: 0.06em; }
+.fact-value { margin-top: 0.4rem; color: var(--ink); }
+.fact-value .muted { color: var(--ink-soft); }
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  list-style: none;
+}
+.skill-list li { font-size: 0.9375rem; color: var(--ink-soft); }
+.skill-list li:not(:last-child)::after {
+  content: "·";
+  margin-left: 0.4rem;
+  color: var(--lilac-deep);
+}
+
+/* ---------- Contact ---------- */
+
+.contact { text-align: center; }
+.contact .section-title { margin-top: 1rem; }
+
+.contact-eyebrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.avail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(196, 176, 255, 0.22);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:lang(ka) .avail-chip { letter-spacing: 0.06em; }
+.avail-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lilac-mid);
+  animation: avail-pulse 2.4s ease-out infinite;
+}
+@keyframes avail-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.55); }
+  70%  { box-shadow: 0 0 0 9px rgba(167, 139, 250, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0); }
+}
+
+/* The finale headline — hero-scale display type with the site's spark. */
+.contact-giant {
+  margin-top: 1.6rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 5.6vw, 4.6rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--ink);
+  transition: color 0.5s var(--ease-out), text-shadow 0.5s var(--ease-out);
+}
+.contact:hover .contact-giant {
+  color: var(--lilac);
+  text-shadow: 0 0 60px rgba(124, 92, 214, 0.55);
+}
+.contact-spark {
+  display: inline-block;
+  margin-left: 0.18em;
+  font-size: 0.5em;
+  vertical-align: 0.45em;
+  color: var(--lilac-mid);
+  text-shadow: 0 0 24px rgba(167, 139, 250, 0.8);
+  animation: spark-breathe 3.2s ease-in-out infinite;
+}
+@keyframes spark-breathe {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50%      { transform: scale(1.25) rotate(22deg); opacity: 1; }
+}
+
+.contact-lede {
+  margin-top: 1rem;
+  color: var(--ink-soft);
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+}
+
+.contact-mail-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.copy-mail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(196, 176, 255, 0.28);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.3s var(--ease-out), color 0.3s var(--ease-out),
+              background-color 0.3s var(--ease-out);
+}
+.copy-mail:hover { border-color: var(--lilac-mid); color: var(--ink); }
+.copy-mail.is-copied {
+  border-color: transparent;
+  background: var(--lilac-mid);
+  color: #0b0a10;
+}
+
+.contact-meta {
+  margin-top: 1.3rem;
+  font-size: 0.9375rem;
+  color: var(--ink-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avail-dot, .contact-spark { animation: none; }
+}
+.contact-mail {
+  display: inline-block;
+  margin-top: 1.6rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.4rem, 4.4vw, 3.2rem);
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  word-break: break-word;
+  background-image: linear-gradient(var(--lilac), var(--lilac));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size 0.5s var(--ease-out), color 0.35s ease;
+}
+.contact-mail:hover { color: var(--lilac); background-size: 100% 1px; }
+
+/* ---------- Social row ----------
+   Uiverse.io component by Zameerahmad01 — icon disc, brand fill rising from the
+   bottom edge, tooltip above — rebuilt for this room. At rest each disc is a
+   pane of lilac-tinted glass like everything else here; the brand colour is not
+   a fill sitting on the page, it arrives as light and leaves with the pointer.
+   Behance stands where the original put YouTube.
+
+   Every part of one network reads the same three custom properties, so a new
+   network is one rule, not four. They live on the <li> because the tooltip is a
+   sibling of the <a>, not a child of it. */
+
+.example-2 {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2.6rem;
+  list-style: none;
+}
+
+.icon-content {
+  position: relative;
+  --brand: var(--lilac-deep);
+  --brand-ink: #fff;
+  --brand-glow: var(--lilac-deep);
+}
+.icon-content[data-social="linkedin"]  { --brand: #0a66c2; --brand-glow: #0a66c2; }
+.icon-content[data-social="github"]    { --brand: #e6edf3; --brand-glow: #e6edf3;
+                                         --brand-ink: #0b0a10; }
+.icon-content[data-social="behance"]   { --brand: #0057ff; --brand-glow: #0057ff; }
+.icon-content[data-social="instagram"] {
+  --brand: linear-gradient(135deg, #f9ce34, #ee2a7b 48%, #6228d7);
+  --brand-glow: #ee2a7b;
+}
+
+.icon-content a {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  overflow: hidden;
+  color: var(--ink-soft);
+  background: rgba(196, 176, 255, 0.05);
+  border: 1px solid rgba(196, 176, 255, 0.16);
+  transition: color 0.3s ease, border-color 0.35s ease,
+              transform 0.45s var(--ease-out), box-shadow 0.4s ease;
+}
+.icon-content a:hover,
+.icon-content a:focus-visible {
+  color: var(--brand-ink);
+  border-color: transparent;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 26px -8px var(--brand-glow);
+  /* The global :focus-visible rule squares every focused box off at 2px; a disc
+     has to say otherwise or it turns into a rounded square under the keyboard. */
+  border-radius: 50%;
+}
+
+.icon-content a svg {
+  position: relative;
+  z-index: 1;
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+/* The fill rises by scaling off its own bottom edge rather than by growing its
+   height — same picture (a gradient paints into the box it is given either
+   way), no layout on the way up. */
+.icon-content .filled {
+  position: absolute;
+  inset: 0;
+  background: var(--brand);
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
+  transition: transform 0.45s var(--ease-out);
+}
+.icon-content a:hover .filled,
+.icon-content a:focus-visible .filled { transform: scaleY(1); }
+
+.icon-content .tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.3rem);
+  transform: translate(-50%, 0.4rem);
+  padding: 0.28rem 0.6rem;
+  border-radius: 0.4rem;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.35s var(--ease-out),
+              visibility 0.3s;
+}
+.icon-content:hover .tooltip,
+.icon-content:focus-within .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -0.15rem);
+}
+
+.site-foot {
+  padding: 2.2rem clamp(1.25rem, 4vw, 3.5rem) 2.6rem;
+  border-top: 1px solid rgba(196, 176, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+
+/* ============================================================
+   CASE STUDY PAGES
+   ============================================================ */
+
+.case-body { padding-top: clamp(8.5rem, 18vh, 12rem); }
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition: color 0.25s ease;
+}
+.back-link:hover { color: var(--lilac); }
+.back-link .arrow { transition: transform 0.35s var(--ease-out); }
+.back-link:hover .arrow { transform: translateX(-4px); }
+
+.case-head { max-width: 76rem; margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3.5rem); }
+/* The eyebrow is inline-flex by default so it can sit beside a title; in the
+   case head it follows the back link, so it has to become block-level. */
+.case-head .eyebrow { display: flex; width: fit-content; margin-top: 2.2rem; }
+
+.case-title {
+  margin-top: 1.6rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.2rem, 5vw, 3.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.case-standfirst {
+  margin-top: 1.2rem;
+  max-width: 40rem;
+  font-size: clamp(1.0625rem, 1.6vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.case-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 1.5rem 2rem;
+  margin-top: 3rem;
+  padding: 1.6rem 0;
+  border-top: 1px solid rgba(196, 176, 255, 0.14);
+  border-bottom: 1px solid rgba(196, 176, 255, 0.14);
+}
+
+.case-hero {
+  max-width: 82rem;
+  margin: clamp(3rem, 7vw, 5rem) auto 0;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+}
+.case-hero img {
+  width: 100%;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 176, 255, 0.12);
+}
+
+.prose { max-width: 40rem; margin: 0 auto; }
+.prose > * + * { margin-top: 1.15rem; }
+.prose p, .prose li { color: var(--ink-soft); font-size: clamp(1rem, 1.3vw, 1.0938rem); }
+.prose strong { color: var(--ink); font-weight: 500; }
+.prose h2 {
+  margin-top: 3.2rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.prose h3 {
+  margin-top: 2.6rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.15rem, 1.8vw, 1.375rem);
+  line-height: 1.25;
+  color: var(--ink);
+}
+.prose h3 .num {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--lilac-deep);
+  margin-bottom: 0.5rem;
+}
+:lang(ka) .prose h3 .num { letter-spacing: 0.06em; }
+.prose ul { padding-left: 1.15rem; }
+.prose li + li { margin-top: 0.5rem; }
+.prose li::marker { color: var(--lilac-deep); }
+
+/* A quiet aside for the honest caveats — bordered by light, not filled. */
+.aside {
+  margin-top: 2rem;
+  padding: 1.3rem 1.5rem;
+  /* 1px at low alpha, like every other border in this world — the wash to its
+     right is what carries the emphasis. */
+  border-left: 1px solid rgba(196, 176, 255, 0.45);
+  background: linear-gradient(90deg, rgba(124, 92, 214, 0.08), transparent 70%);
+  border-radius: 0 6px 6px 0;
+}
+.aside p { font-size: 1rem; }
+
+/* ---------- Figures ---------- */
+
+.figure { margin: clamp(2.8rem, 6vw, 4.5rem) auto 0; }
+.figure-wide { max-width: 82rem; padding: 0 clamp(1.25rem, 4vw, 3.5rem); }
+
+.frame {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(196, 176, 255, 0.12);
+  background: var(--bg-raise);
+}
+.frame img { width: 100%; display: block; }
+
+.caption {
+  margin: 0.95rem auto 0;
+  max-width: 40rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ink-faint);
+}
+.caption b { color: var(--ink-soft); font-weight: 500; }
+
+/* Phone rows scroll sideways rather than shrinking to illegibility. */
+.shots {
+  display: flex;
+  gap: clamp(0.85rem, 2vw, 1.5rem);
+  overflow-x: auto;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem) 0.9rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+.shots > figure {
+  flex: 0 0 auto;
+  width: clamp(190px, 22vw, 268px);
+  scroll-snap-align: center;
+}
+.shots img {
+  width: 100%;
+  display: block;
+  border-radius: 20px;
+  border: 1px solid rgba(196, 176, 255, 0.14);
+  background: var(--bg-raise);
+}
+.shots figcaption {
+  margin-top: 0.7rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+.shots figcaption b { display: block; color: var(--ink-soft); font-weight: 500; }
+
+.shots-wrap { margin: clamp(2.8rem, 6vw, 4.5rem) auto 0; }
+.shots-wrap > .caption { padding: 0 clamp(1.25rem, 4vw, 3.5rem); }
+
+/* ---------- Next project ---------- */
+
+.next-case {
+  margin-top: clamp(5rem, 11vh, 8rem);
+  border-top: 1px solid rgba(196, 176, 255, 0.12);
+}
+.next-case a {
+  display: block;
+  padding: clamp(3rem, 7vw, 5rem) clamp(1.25rem, 4vw, 3.5rem);
+  max-width: 76rem;
+  margin: 0 auto;
+}
+.next-case .work-title { margin-top: 0.9rem; transition: color 0.3s ease; }
+.next-case a:hover .work-title { color: var(--lilac); }
+.next-case .arrow { display: inline-block; transition: transform 0.4s var(--ease-out); }
+.next-case a:hover .arrow { transform: translateX(6px); }
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 860px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "photo" "beam" "copy" "facts";
+  }
+  /* One column: the portrait shouldn't tower, and the beam needs its own
+     height with no facts card beside it. */
+  .photo-frame, .skills-beam { max-width: 26rem; width: 100%; }
+  .photo-frame { aspect-ratio: 4 / 4.2; }
+  .skills-beam { min-height: 280px; }
+  .section-lede { margin-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .work-lede { margin-left: 0; }
+  .project-head { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Narrow: a hand cannot fan sideways beside a desktop plate, so each
+   arrangement re-forms for the column. The plate goes on top at full width and
+   the phones spread under its bottom edge; the proofs drop to two rows. Each
+   deck goes square so every piece stays *inside* it — the caption hangs below
+   the deck and anything overflowing would land on it. */
+@media (max-width: 760px) {
+  /* Side by side, a phone on a phone is a stamp. Stacked, both stay legible:
+     the desktop view full width, the app screen under it at half. */
+  .deck--duo { flex-direction: column; align-items: stretch; gap: 1.75rem; }
+  .deck--duo .duo-wide, .deck--duo .duo-tall { flex: 1 1 auto; }
+  .deck--duo .duo-tall { width: 54%; margin: 0 auto; }
+
+  /* The single card simply gets wider; it is already the whole composition. */
+  .deck--single .deck-item { width: 100%; }
+  .deck--single .deck-shot { aspect-ratio: var(--card-aspect, 4 / 3); }
+
+  /* The two modes stack instead of standing level, and the marks run under. */
+  .deck--pair { aspect-ratio: 1 / 1; }
+  .deck--pair .mode-light { left: 0;   top: 2%;  width: 84%; }
+  .deck--pair .mode-dark  { left: 16%; top: 30%; width: 84%; }
+  .deck--pair .mark { width: 15%; }
+  .deck--pair .mark-a { left: 2%;  top: 74%; }
+  .deck--pair .mark-b { left: 20%; top: 72%; }
+  .deck--pair .mark-c { left: 38%; top: 71%; }
+  .deck--pair .mark-d { left: 56%; top: 72%; }
+  .deck--pair .mark-e { left: 74%; top: 74%; }
+}
+
+@media (max-width: 480px) {
+  .sheet-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  /* No runway and no travel: the hands are simply already reaching, and the
+     hero is one screen tall again. The layer transforms stay — those place the
+     plates, they are layout rather than motion. */
+  .hero { --hero-drive: 0px; }
+
+  .site-nav,
+  .hero-copy,
+  .hero-intro,
+  .hero-title .line-inner,
+  .hero-sub,
+  .hero-actions {
+    transition: opacity 0.4s ease;
+    transform: none !important;
+  }
+  .spark, .spark-ring, .scroll-cue-line::after { animation: none; }
+  .spark-ring { opacity: 0; }
+
+  .reveal { transition: opacity 0.4s ease; transform: none !important; }
+  .work-frame img,
+  .work-cta .arrow,
+  .back-link .arrow,
+  .next-case .arrow { transition: none; transform: none !important; }
+
+  /* The hands are simply already dealt, and a screen picked off the sheet
+     arrives rather than flies. Nothing in the arrangement moves on its own. */
+  .deck-item { opacity: 1 !important; }
+  .deck-shot, .deck-shot img, .tile-box img { transition: none; }
+  .deck-item:hover .deck-shot { transform: rotate(0deg) !important; }
+
+  /* The social discs still light up — that is the answer to "where does this go"
+     — they simply stop rising, and the colour arrives instead of climbing. */
+  .icon-content a { transform: none !important; }
+  .icon-content .filled { transition: none; }
+  .icon-content .tooltip {
+    transform: translate(-50%, -0.15rem) !important;
+    transition: opacity 0.2s ease, visibility 0.2s;
+  }
+}
+
+/* ---------- No JavaScript ----------
+   Every entrance here starts from invisible, which is fine while a script is
+   there to finish the sentence. Without one, nothing is animated in: it is
+   simply already here, hands mid-reach, at the rest position the layers
+   default to. */
+
+html:not(.js) .hero { --hero-drive: 0px; }
+html:not(.js) .hero-scene,
+html:not(.js) .site-nav,
+html:not(.js) .hero-intro,
+html:not(.js) .hero-sub,
+html:not(.js) .hero-actions,
+html:not(.js) .reveal { opacity: 1; transform: none; }
+html:not(.js) .hero-title .line-inner { transform: none; }
+html:not(.js) .scroll-cue { --cue-in: 1; }
+
+/* Parked at the same near-touch the reduced-motion hero holds, so the spark
+   has two fingertips to sit between instead of floating in the gap. */
+html:not(.js) .layer-human { --x: 0.93; --y: -0.43; }
+html:not(.js) .layer-robot { --x: -0.93; --y: 0.43; }
+html:not(.js) .contact-point { --ignite: 0.85; --halo: 0.7; }
+
+/* Every hand is laid out by CSS alone, so with no script it is already dealt —
+   the only thing missing is the dealing. The contact sheet is plain content and
+   needs nothing; its buttons simply do not swap. */
+html:not(.js) .deck-item { opacity: 1; }
+html:not(.js) .tile { cursor: default; }

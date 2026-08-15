@@ -1,0 +1,104 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-radius",
+        "value": "5px",
+        "createdAt": "2026-08-13T03:11:50.034Z",
+        "reason": "scrollbar thumb one-off; documenter explicitly left it out of the token set; finish review shipped it"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "2px",
+        "createdAt": "2026-08-13T03:11:50.144Z",
+        "reason": "focus-visible outline radius, functional a11y one-off; shipped by finish review"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "0.875rem",
+        "createdAt": "2026-08-13T03:11:50.253Z",
+        "reason": "mobile nav-link step, part of reviewer-mandated mobile nav fix; shipped"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "0.8125rem",
+        "createdAt": "2026-08-13T03:11:50.361Z",
+        "reason": "language-toggle chip micro-size, documented as sidecar component; shipped"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1rem",
+        "createdAt": "2026-08-13T03:11:50.479Z",
+        "reason": "hero-sub fluid clamp lower endpoint of documented body step; shipped"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "0.75rem",
+        "createdAt": "2026-08-13T03:11:50.597Z",
+        "reason": "scroll-cue micro-label, documented in DESIGN.md strictly as cue treatment; shipped"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.9rem",
+        "createdAt": "2026-08-13T03:11:50.712Z",
+        "reason": "mobile display clamp endpoint of documented display ramp; shipped"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff",
+        "createdAt": "2026-08-13T03:11:50.824Z",
+        "reason": "DESIGN.md White Core rule sanctions pure #fff as light-source cores (spark, cue drop); detector cannot match the prose rule"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f9ce34",
+        "createdAt": "2026-08-14T04:13:35.127Z",
+        "reason": "Instagram's own brand gradient stop, used only inside the social row's hover fill/tooltip — a third-party mark, not a palette addition; the site palette still owns every resting state."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ee2a7b",
+        "createdAt": "2026-08-14T04:13:35.257Z",
+        "reason": "Instagram's own brand gradient stop, used only inside the social row's hover fill/tooltip — a third-party mark, not a palette addition; the site palette still owns every resting state."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#6228d7",
+        "createdAt": "2026-08-14T04:13:35.359Z",
+        "reason": "Instagram's own brand gradient stop, used only inside the social row's hover fill/tooltip — a third-party mark, not a palette addition; the site palette still owns every resting state."
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-08-14T21:16:01.689Z",
+        "reason": "user requested an intentionally empty portrait frame (photo arrives later); no <img> tag ships — hook matched a comment/placeholder"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "createdAt": "2026-08-15T01:09:59.247Z",
+        "reason": "user confirmed: asked for a black (shavi) edge blur on the hero"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(0, 0, 0, 0.72)",
+        "createdAt": "2026-08-15T01:09:59.345Z",
+        "reason": "user confirmed: midpoint of the same black hero edge blur"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "arial",
+        "files": [
+          "src/components/BeamIcons.jsx"
+        ],
+        "createdAt": "2026-08-15T01:11:29.483Z",
+        "reason": "third-party brand marks (Ps/N/JS wordmarks) drawn inside their own SVG viewBox; brand letterforms must not inherit the site type system"
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+# Dependencies & build output
+node_modules/
+dist/
+
+# Personal / working documents — kept locally, not published
+LINKEDIN.md
+TODO.md
+
+# Superseded builds and scratch explorations
+_backup/
+_archive/
+_mockup/
+
+# Editor & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.local

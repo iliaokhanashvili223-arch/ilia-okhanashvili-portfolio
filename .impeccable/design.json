@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-13T00:00:00Z",
+  "title": "Design System: Ilia Okhanashvili Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "bg": { "role": "neutral", "displayName": "The Room", "canonical": "#0b0a10", "tonalRamp": ["#0b0a10", "#14121d", "#1f1b2e", "#2b2440", "#3d3458", "#5a4d7d", "#877ca6", "#b6abd1"] },
+      "bg-raise": { "role": "neutral", "displayName": "Raised Room", "canonical": "#14121d", "tonalRamp": ["#0b0a10", "#14121d", "#1f1b2e", "#2b2440", "#3d3458", "#5a4d7d", "#877ca6", "#b6abd1"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#f2eff9", "tonalRamp": ["#2b2440", "#3d3458", "#5a4d7d", "#877ca6", "#b6abd1", "#d4cbe8", "#f2eff9", "#faf8fd"] },
+      "ink-soft": { "role": "neutral", "displayName": "Soft Ink", "canonical": "#b6abd1", "tonalRamp": ["#2b2440", "#3d3458", "#5a4d7d", "#877ca6", "#b6abd1", "#d4cbe8", "#f2eff9", "#faf8fd"] },
+      "ink-faint": { "role": "neutral", "displayName": "Faint Ink", "canonical": "#877ca6", "tonalRamp": ["#2b2440", "#3d3458", "#5a4d7d", "#877ca6", "#b6abd1", "#d4cbe8", "#f2eff9", "#faf8fd"] },
+      "lilac": { "role": "primary", "displayName": "Lilac", "canonical": "#c4b0ff", "tonalRamp": ["#1a1430", "#2e2352", "#443577", "#5b489c", "#7c5cd6", "#a78bfa", "#c4b0ff", "#e6ddff"] },
+      "lilac-mid": { "role": "primary", "displayName": "Lilac Mid", "canonical": "#a78bfa", "tonalRamp": ["#1a1430", "#2e2352", "#443577", "#5b489c", "#7c5cd6", "#a78bfa", "#c4b0ff", "#e6ddff"] },
+      "lilac-deep": { "role": "primary", "displayName": "Lilac Deep", "canonical": "#7c5cd6", "tonalRamp": ["#1a1430", "#2e2352", "#443577", "#5b489c", "#7c5cd6", "#a78bfa", "#c4b0ff", "#e6ddff"] },
+      "on-lilac": { "role": "neutral", "displayName": "On-Lilac Ink", "canonical": "#0d0817", "tonalRamp": ["#0d0817", "#1a1430", "#2e2352", "#443577", "#5b489c", "#7c5cd6", "#a78bfa", "#c4b0ff"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headline only; stacked masked lines, final line in Lilac." },
+      "body": { "displayName": "Body", "purpose": "Running copy in Soft Ink; hero sub uses clamp(1rem, 1.4vw, 1.125rem), measure ~34rem." },
+      "label": { "displayName": "Label", "purpose": "Nav links and the name-role byline." },
+      "action": { "displayName": "Action", "purpose": "Button labels; the language toggle runs a smaller cousin (0.8125rem / 700 / +0.06em)." }
+    },
+    "shadows": [
+      { "name": "spark-signature", "value": "0 0 12px 3px rgba(255,255,255,0.9), 0 0 34px 12px rgba(196,176,255,0.55), 0 0 90px 40px rgba(124,92,214,0.28)", "purpose": "The canonical light form: white core, lilac halo, deep-violet ambience. Worn by the hero spark." },
+      { "name": "button-glow-rest", "value": "0 0 10px -2px rgba(255,255,255,0.28), 0 4px 24px -6px rgba(124,92,214,0.6)", "purpose": "Primary button at rest — the spark signature scaled down." },
+      { "name": "button-glow-hover", "value": "0 0 14px -2px rgba(255,255,255,0.4), 0 8px 32px -6px rgba(167,139,250,0.7)", "purpose": "Primary button hover — glow brightens and widens with a -2px lift." },
+      { "name": "dot-glow", "value": "0 0 10px 1px #7c5cd6", "purpose": "Wordmark's 6px lilac dot. Emission only; no lifting drop shadows exist in this world." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "The single house easing for every entrance and transform." },
+      { "name": "duration-state", "value": "0.25s-0.3s", "purpose": "Color, border, and opacity micro-transitions on plain ease." },
+      { "name": "spark-period", "value": "3.4s", "purpose": "Spark breathe (opacity 0.75 to 1) and ripple ring cycle, ease-in-out." },
+      { "name": "entrance-schedule", "value": "scene 1.6s/2.8s from scale(1.06); title lines rise from 110% mask at delays 0.5s/0.63s/0.76s; byline 0.95s; sub 1.05s; actions 1.2s; nav 1.1s; cue 1.7s", "purpose": "Orchestration gated on body.is-loaded (hero image load, 2.5s fail-safe). Reduced motion collapses all of it to 0.4s opacity fades." },
+      { "name": "parallax", "value": "target +/-14px x, +/-10px y; lerp 0.06 via rAF", "purpose": "Fine pointers only, never under reduced motion; the scene drifts toward the cursor." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-nav", "value": "760px", "purpose": "Nav wraps to second row, scroll cue hidden, display type steps down, scene nudged +6% right, parallax off." },
+      { "name": "hero-image-swap", "value": "640px", "purpose": "Smaller hero image served via <picture>." },
+      { "name": "full-width-actions", "value": "420px", "purpose": "Action buttons stretch full width." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one lit object: lilac gradient pill wearing the spark's light signature. Main CTA only.",
+      "html": "<a href=\"#\" class=\"ds-btn-primary\">View work</a>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 0.85rem 1.7rem; border-radius: 999px; font-family: 'Satoshi', 'Noto Sans Georgian', sans-serif; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.015em; text-decoration: none; background: linear-gradient(135deg, var(--lilac-mid, #a78bfa), var(--lilac-deep, #7c5cd6)); color: var(--on-lilac, #0d0817); box-shadow: 0 0 10px -2px rgba(255,255,255,0.28), 0 4px 24px -6px rgba(124,92,214,0.6); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease; } .ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 14px -2px rgba(255,255,255,0.4), 0 8px 32px -6px rgba(167,139,250,0.7); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--lilac-mid, #a78bfa); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action: luminous 1px lilac border over blurred translucent room-tint.",
+      "html": "<a href=\"#\" class=\"ds-btn-ghost\">Get in touch</a>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; padding: 0.85rem 1.7rem; border-radius: 999px; font-family: 'Satoshi', 'Noto Sans Georgian', sans-serif; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.015em; text-decoration: none; border: 1px solid rgba(196,176,255,0.3); color: var(--ink, #f2eff9); background: rgba(20,18,29,0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, border-color 0.3s ease; } .ds-btn-ghost:hover { border-color: rgba(196,176,255,0.65); background: rgba(124,92,214,0.12); } .ds-btn-ghost:active { transform: translateY(1px); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--lilac-mid, #a78bfa); outline-offset: 3px; }"
+    },
+    {
+      "name": "Language Toggle",
+      "kind": "chip",
+      "refersTo": "lang-toggle",
+      "description": "EN/KA pill chip; active language lights up in Lilac, border brightens on hover.",
+      "html": "<button type=\"button\" class=\"ds-lang-toggle\" aria-label=\"Switch language\"><span class=\"ds-lang-opt ds-is-active\">EN</span><span class=\"ds-lang-divider\" aria-hidden=\"true\">/</span><span class=\"ds-lang-opt\">ქა</span></button>",
+      "css": ".ds-lang-toggle { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; background: rgba(20,18,29,0.55); border: 1px solid rgba(196,176,255,0.18); border-radius: 999px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-family: 'Satoshi', 'Noto Sans Georgian', sans-serif; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.06em; color: var(--ink-faint, #877ca6); cursor: pointer; transition: border-color 0.25s ease; } .ds-lang-toggle:hover { border-color: rgba(196,176,255,0.45); } .ds-lang-toggle:focus-visible { outline: 2px solid var(--lilac-mid, #a78bfa); outline-offset: 3px; } .ds-lang-opt { transition: color 0.25s ease; } .ds-lang-opt.ds-is-active { color: var(--lilac, #c4b0ff); } .ds-lang-divider { color: rgba(196,176,255,0.25); }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Soft Ink label that warms to Ink while a 1px lilac underline scales in from the left — light passing under the word.",
+      "html": "<a href=\"#\" class=\"ds-nav-link\">Work</a>",
+      "css": ".ds-nav-link { position: relative; display: inline-block; padding: 0.25rem 0; font-family: 'Satoshi', 'Noto Sans Georgian', sans-serif; font-size: 0.9375rem; font-weight: 500; text-decoration: none; color: var(--ink-soft, #b6abd1); transition: color 0.25s ease; } .ds-nav-link::after { content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px; background: var(--lilac, #c4b0ff); transform: scaleX(0); transform-origin: right; transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); } .ds-nav-link:hover { color: var(--ink, #f2eff9); } .ds-nav-link:hover::after { transform: scaleX(1); transform-origin: left; } .ds-nav-link:focus-visible { outline: 2px solid var(--lilac-mid, #a78bfa); outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "The Spark",
+      "kind": "custom",
+      "refersTo": "spark-signature",
+      "description": "Signature light: 8px white core with lilac halo, breathing on a 3.4s cycle with a rippling 1px ring. Pinned in image space on the hero; reuse this signature wherever the brand needs a live point of light.",
+      "html": "<div class=\"ds-spark-stage\"><span class=\"ds-spark\"></span><span class=\"ds-spark-ring\"></span></div>",
+      "css": ".ds-spark-stage { position: relative; width: 160px; height: 120px; background: var(--bg, #0b0a10); border-radius: 6px; } .ds-spark { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; border-radius: 50%; transform: translate(-50%, -50%); background: #fff; box-shadow: 0 0 12px 3px rgba(255,255,255,0.9), 0 0 34px 12px rgba(196,176,255,0.55), 0 0 90px 40px rgba(124,92,214,0.28); animation: ds-spark-breathe 3.4s ease-in-out infinite; } .ds-spark-ring { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%); border: 1px solid rgba(196,176,255,0.7); animation: ds-spark-ripple 3.4s cubic-bezier(0.16, 1, 0.3, 1) infinite; } @keyframes ds-spark-breathe { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } } @keyframes ds-spark-ripple { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 70%, 100% { transform: translate(-50%, -50%) scale(7); opacity: 0; } } @media (prefers-reduced-motion: reduce) { .ds-spark { animation: none; } .ds-spark-ring { display: none; } }"
+    },
+    {
+      "name": "Scroll Cue",
+      "kind": "custom",
+      "refersTo": "scroll-cue",
+      "description": "Bottom-center invitation: uppercase micro-label over a 1px lilac light line with a white pulse falling through it. Hidden at <=760px.",
+      "html": "<a href=\"#\" class=\"ds-scroll-cue\" aria-label=\"Scroll to work\"><span>Scroll</span><span class=\"ds-scroll-cue-line\" aria-hidden=\"true\"></span></a>",
+      "css": ".ds-scroll-cue { display: inline-flex; flex-direction: column; align-items: center; gap: 0.55rem; text-decoration: none; color: var(--ink-faint, #877ca6); font-family: 'Satoshi', 'Noto Sans Georgian', sans-serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; transition: color 0.25s ease; } .ds-scroll-cue:hover { color: var(--lilac, #c4b0ff); } .ds-scroll-cue-line { width: 1px; height: 44px; background: linear-gradient(180deg, var(--lilac-mid, #a78bfa), transparent); overflow: hidden; position: relative; } .ds-scroll-cue-line::after { content: ''; position: absolute; top: -100%; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, transparent, #fff); animation: ds-cue-drop 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite; } @keyframes ds-cue-drop { 0% { top: -100%; } 60%, 100% { top: 100%; } } @media (prefers-reduced-motion: reduce) { .ds-scroll-cue-line::after { animation: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Almost-Touch",
+    "overview": "The whole system lives inside one charged gap: a human hand and a machine hand a breath apart, with a live spark in between. The world is a near-black violet room (#0b0a10) — not a page with a dark theme, but a room the visitor stands inside. Everything luminous in the room belongs to a single lilac family (#c4b0ff → #7c5cd6), and that family arrives as light, not as paint: the spark's halo, a rim on chrome, a text-selection wash, a focus ring, a glowing underline. The only place lilac is allowed to become a solid material is the primary call-to-action, which borrows the spark's own light signature (white core, lilac halo).\n\nThe voice is calm confidence. Clash Display (medium, tightly leaded) speaks; Satoshi carries the body; Noto Sans Georgian sits in every stack as a first-class sibling, not a fallback — the site is genuinely bilingual and Georgian copy is held to the same craft bar as English. Density is low: one idea per viewport, generous gutters, copy anchored bottom-left so the photograph keeps the room.\n\nMotion is the comp. Entrances are orchestrated (scene → headline lines → byline → sub → actions → nav → cue) on a single easing curve, the spark breathes on a 3.4s cycle, and the scene drifts a few pixels toward the cursor. Under prefers-reduced-motion all of it collapses to quiet opacity fades. The build confirms the contract's refusals: no grid-of-projects opener, no split text/illustration hero, no gray-on-dark text.",
+    "keyCharacteristics": [
+      "One room (near-black violet), one light family (lilac), no second hue.",
+      "Accent carried by light — glow, border, selection, focus — almost never by fill.",
+      "Secondary text is tinted lilac (#b6abd1 / #877ca6), never neutral gray.",
+      "Clash Display voice + Satoshi body + Noto Sans Georgian as an equal sibling script.",
+      "Pure white reserved for the cores of light sources; text ink is #f2eff9.",
+      "One easing curve (cubic-bezier(0.16, 1, 0.3, 1)) for every movement; opacity-only fallback for reduced motion."
+    ],
+    "rules": [
+      { "name": "The Light-Not-Fills Rule", "body": "Lilac reaches the screen as light: glow, rim, border at 0.18–0.7 alpha, selection, focus, gradient on the one primary action. It never becomes a large flat fill or a section background. If a new surface wants lilac, it gets a halo or an edge, not a coat of paint.", "section": "colors" },
+      { "name": "The No-Gray Rule", "body": "There is no neutral gray anywhere on the dark. Every de-emphasized text step (#b6abd1, #877ca6) and every chrome tint (#14121d, scrollbar #2b2440) carries the room's violet.", "section": "colors" },
+      { "name": "The White Core Rule", "body": "Pure white (#fff) appears only as the core of a light source — the spark's center, the falling pulse in the scroll-cue line, the inner ring of the primary button's glow. Text and surfaces never use it; ink is #f2eff9.", "section": "colors" },
+      { "name": "The Sibling Script Rule", "body": "Georgian is first-class: Noto Sans Georgian appears in every font stack, :lang(ka) zeroes letter-spacing (Georgian never takes Latin tracking), and every visible string ships as a data-en/data-ka pair swapped by the language toggle (which also updates <html lang> and its own aria-label in the other language). New copy is not done until both languages are written.", "section": "typography" },
+      { "name": "The Formal Register Rule", "body": "Georgian copy uses the formal plural register (\"იხილეთ ნამუშევრები\", \"დამიკავშირდით\"), matching the professional tone of the English.", "section": "typography" },
+      { "name": "The Image-Space Pin Rule", "body": "When an overlay must align with a feature of a photograph (the spark at the fingertip gap), it is not positioned in viewport space. The photograph lives in a .hero-scene wrapper sized to its own 16:9 box covering the viewport (width: max(100vw, 177.78vh); height: max(100vh, 56.25vw), centered), and the overlay is pinned to percentages of that box (--spark-x: 46.5%; --spark-y: 51.5%). The pin then survives every viewport shape.", "section": "layout" },
+      { "name": "The Emission-Only Rule", "body": "A box-shadow may describe light leaving an element (white core + lilac halo), never darkness beneath it. If an element needs separation from the room, it gets translucency and blur, or a veil — not a drop shadow.", "section": "elevation" },
+      { "name": "The Quiet Fallback Rule", "body": "Under prefers-reduced-motion, all entrances become 0.4s opacity fades with transforms stripped, the spark stops breathing, the ripple ring hides, and parallax never binds. Reduced motion is a first-class rendering of the world, not a broken one.", "section": "components" }
+    ],
+    "dos": [
+      "Do deliver lilac as light — glow, 1px low-alpha border, selection, focus ring, underline — and reserve solid lilac for the primary CTA's gradient alone.",
+      "Do tint every secondary text and chrome color into the violet family (#b6abd1, #877ca6, #14121d); run the No-Gray audit on any new hex before it ships.",
+      "Do keep Noto Sans Georgian in every font stack, ship every string as a data-en/data-ka pair in formal-register Georgian, and let :lang(ka) zero the letter-spacing.",
+      "Do use the single house easing cubic-bezier(0.16, 1, 0.3, 1) for all movement, gate entrances on .is-loaded, and provide the opacity-only reduced-motion path for anything that moves.",
+      "Do pin photo-anchored overlays in image space via a 16:9 cover wrapper and percentage coordinates, per the Image-Space Pin Rule."
+    ],
+    "donts": [
+      "Don't use neutral gray text or surfaces on the dark room, and don't use pure #fff for text — white belongs only to light-source cores.",
+      "Don't introduce a second accent hue; the world has one lilac family, dark to light.",
+      "Don't cast drop shadows to lift surfaces; separation comes from translucency, blur, and veils (the Emission-Only Rule).",
+      "Don't collapse mobile navigation into a hamburger; links wrap to a second row and stay visible.",
+      "Don't add kickers/eyebrows above headlines. The uppercase letterspaced micro-style exists only as the scroll cue's label; it is not a headline-introducer pattern.",
+      "Don't open any surface with a grid-of-projects or a split text/illustration composition; each surface opens inside one charged moment."
+    ]
+  }
+}
